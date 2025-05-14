@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+.login-text {
+  /* Default styles (applies to desktop view) */
+  left: 45%;
+}
+
+/* Styles for mobile view */
+@media (max-width: 768px) {
+  .login-text {
+    left: 30%;
+  }
+}
+
+.otpForm{
+  max-width: 500px;
+  margin: 0 auto 0 auto;
+}
+
+.bannerImg{
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .bannerImg{
+    height: 220px;
+    object-fit: cover;
+  }
+} 
