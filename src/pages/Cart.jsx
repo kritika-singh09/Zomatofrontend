@@ -105,7 +105,7 @@ const Cart = () => {
         <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg border-t">
           <button 
             onClick={handleCheckout}
-            className="w-full bg-red-400 hover:bg-red-800 text-white py-3 rounded-lg font-medium"
+            className="w-full bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white py-3 rounded-lg font-medium"
           >
             Proceed to Checkout • ₹{(totalPrice + 30).toFixed(2)}
           </button>

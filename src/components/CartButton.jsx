@@ -19,7 +19,7 @@ const CartButton = () => {
   return (
     <button
       onClick={() => navigate('/cart')}
-      className="fixed bottom-5 right-5 bg-green-500 text-white p-3 rounded-full shadow-lg z-50 flex items-center justify-center"
+      className="fixed bottom-5 right-5 bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white p-3 rounded-full shadow-lg z-50 flex items-center justify-center"
       style={{ width: '60px', height: '60px' }}
     >
       <div className="relative">

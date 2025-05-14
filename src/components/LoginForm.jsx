@@ -17,58 +17,77 @@ const LoginForm = () => {
   setIsValid(phoneRegex.test(value));
   }
 
-  const sendOtp = async (e) => {
-    e.preventDefault();
-    if (phone.length === 10 && /^[0-9]+$/.test(phone)) {
-      try {
-         if (window.recaptchaVerifier) {
-          window.recaptchaVerifier.clear();
-          delete window.recaptchaVerifier;
-        }
-        
-        if (!window.recaptchaVerifier) {
-          window.recaptchaVerifier = new RecaptchaVerifier(
-            auth, "recaptcha-container",
-            {
-              size: "normal",
-              callback: async (response) => {
-                console.log("reCAPTCHA solved");
-                
-                // After reCAPTCHA is solved, call the API
-                try {
-                  const result = await login(phone);
-                  
-                  if (result.success) {
-                    toast.success("OTP sent successfully!");
-                    navigate('/verification');
-                  } else {
-                    toast.error(result.message || "Failed to send OTP. Try again.");
-                  }
-                } catch (error) {
-                  console.error("API error:", error);
-                  toast.error("Failed to send OTP. Try again.");
-                }
-              },
-              "expired-callback": () => {
-                toast.error("reCAPTCHA expired. Please solve it again.");
-              }
+const sendOtp = async (e) => {
+  e.preventDefault();
+  if (phone.length === 10 && /^[0-9]+$/.test(phone)) {
+    try {
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        delete window.recaptchaVerifier;
+      }
+      
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          auth, "recaptcha-container",
+          {
+            size: "normal",
+            callback: (response) => {
+              console.log("reCAPTCHA solved");
+            },
+            "expired-callback": () => {
+              toast.error("reCAPTCHA expired. Please solve it again.");
             }
-          );
+          }
+        );
+      }
+      
+      // Render the reCAPTCHA widget
+      await window.recaptchaVerifier.render().then((widgetId) => {
+        window.recaptchaWidgetId = widgetId;
+      });
+      
+      const appVerifier = window.recaptchaVerifier;
+      
+      try {
+        const confirmation = await signInWithPhoneNumber(
+          auth,
+          "+91" + phone,
+          appVerifier
+        );
+        
+        if (confirmation && confirmation.verificationId) {
+          window.confirmationResult = confirmation;
+          toast.success("OTP sent successfully!");
+          navigate('/verification');
+        } else {
+          toast.error("Failed to initiate OTP process.");
         }
+      } catch (error) {
+        console.error("OTP send error:", error);
+        toast.error("Failed to send OTP. Try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to initialize reCAPTCHA. Try again.");
+    }
+  } else {
+    toast.error("Please enter a valid 10-digit phone number.");
+  }
+};
         
         // Render the reCAPTCHA widget
-        await window.recaptchaVerifier.render().then((widgetId) => {
-          window.recaptchaWidgetId = widgetId;
-        });
+  //       await window.recaptchaVerifier.render().then((widgetId) => {
+  //         window.recaptchaWidgetId = widgetId;
+  //       });
         
-      } catch (error) {
-        console.error(error);
-        toast.error("Failed to initialize reCAPTCHA. Try again.");
-      }
-    } else {
-      toast.error("Please enter a valid 10-digit phone number.");
-    }
-  };
+  //     } catch (error) {
+  //       console.error(error);
+  //       toast.error("Failed to initialize reCAPTCHA. Try again.");
+  //     }
+  //   } else {
+  //     toast.error("Please enter a valid 10-digit phone number.");
+  //   }
+  // };
 
 //         if (window.recaptchaVerifier) {
 //           window.recaptchaVerifier.clear();
@@ -155,10 +174,10 @@ const LoginForm = () => {
         </div>
         {!isValid && phone.length > 3 && (
   <p className="text-red-500 text-sm mt-1">
-    Please enter a valid Indian phone number (+91 followed by 10 digits)
+    Please enter a valid Indian phone number
   </p>
 )}
-        <button type='submit' className='w-[250px] py-2.5 px-1.5 rounded-md text-white bg-red-800'>Continue</button>
+        <button type='submit' className='w-[250px] py-2.5 px-1.5 rounded-md text-white bg-red-400 transition-all duration-300 ease-in-out hover:bg-red-800'>Continue</button>
         <div id="recaptcha-container" className="mb-3 flex justify-center mt-3"></div>
 
       </form>

@@ -2,12 +2,12 @@
 import { FaStar, FaFire, FaHeart, FaLeaf } from "react-icons/fa";
 import { MdLocalOffer } from "react-icons/md";
 import { GiNoodles, GiChickenLeg, GiCupcake } from "react-icons/gi";
-import chickenImg from "../assets/food/chicken.jpg";
-import pizzaImg from "../assets/food/pizza.jpeg";
-import biryaniImg from "../assets/food/biryani.jpeg";
-import noodlesImg from "../assets/food/noodles.jpeg";
-import dosaImg from "../assets/food/dosa.jpeg";
-import brownieImg from "../assets/food/brownie.jpeg";
+import chickenImg from "../../assets/food/chicken.jpg";
+import pizzaImg from "../../assets/food/pizza.jpeg";
+import biryaniImg from "../../assets/food/biryani.jpeg";
+import noodlesImg from "../../assets/food/noodles.jpeg";
+import dosaImg from "../../assets/food/dosa.jpeg";
+import brownieImg from "../../assets/food/brownie.jpeg";
 // foodData.js
 export const foodRecommendations = [
   {

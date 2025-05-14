@@ -11,6 +11,7 @@ import FoodSlider from "./FoodSlider";
 import FilterSlider from "./FilterSlider";
 import FoodCard from "./FoodCard";
 import { FiLogOut } from "react-icons/fi";
+import { useAppContext } from "../../context/AppContext";
 
 const Header = () => {
   const [AddressLine1, setAddressLine1] = useState(["Azad Colony "]);
@@ -34,7 +35,24 @@ const Header = () => {
 
         <div className="flex items-center text-2xl">
           <LuReceiptIndianRupee />
-          <FaUser className="mx-4" />
+            <div className="relative group mx-4">
+          <FaUser className="cursor-pointer" />
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+               {user && (
+                <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                  <p className="font-medium">{user.name || 'User'}</p>
+                  <p className="text-xs">{user.phone}</p>
+                </div>
+              )}
+               <button 
+                onClick={logout}
+                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+              >
+                <FiLogOut className="mr-2" />
+                Logout
+              </button>
+               </div>
+          </div>
         </div>
       </div>
       <div className="px-9">

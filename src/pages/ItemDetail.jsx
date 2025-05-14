@@ -102,8 +102,7 @@ const ItemDetail = () => {
         </div>
       ) : (
         ""
-      )}
-      
+      )}     
      </div>
       <div className="flex justify-between">
         <div>
@@ -155,7 +154,7 @@ const ItemDetail = () => {
         {isItemInCart ? (
           <button 
             onClick={() => navigate('/cart')}
-            className="w-full bg-red-400 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
+            className="w-full bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
           >
             <BsCart3 size={20} />
             View Cart {totalItems > 0 && `(${totalItems})`}
@@ -163,7 +162,7 @@ const ItemDetail = () => {
         ) : (
           <button 
             onClick={handleAddToCart}
-            className="w-full bg-red-400 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
+            className="w-full bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
           >
             <BsCartPlus size={20} />
             Add to Cart

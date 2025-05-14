@@ -152,7 +152,7 @@ const Recommendation = () => {
           {/* Filter dropdown */}
           <div className="relative">
             <button 
-              className={`flex items-center gap-2 border rounded-md px-3 py-1.5 text-sm transition-colors ${
+              className={`flex items-center gap-2 border rounded-2xl px-3 py-1 text-xs mr-1 transition-colors ${
                 isNonDefaultFilterActive 
                   ? 'border-red-800 bg-red-50 text-red-800' 
                   : 'border-gray-300 text-gray-700'

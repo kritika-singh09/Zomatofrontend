@@ -1,9 +1,11 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+
 
 export const AppContext = createContext();
 
-const API_URL = "https://backend-lime-nu.vercel.app";
+const API_URL = "https://backend2-umber-zeta.vercel.app";
+
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ export const AppContextProvider = ({ children }) => {
   }, [token]);
 
   // Login function
-  const login = async (phoneNumber) => {
+  const login = async (phoneNumber, firebaseUid) => {
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -45,12 +47,16 @@ export const AppContextProvider = ({ children }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phone: phoneNumber }),
+        body: JSON.stringify({ phone: phoneNumber, firebaseUid }),
       });
       
       const data = await response.json();
-      
+
       if (response.ok) {
+        // Save user data
+        localStorage.setItem('user', JSON.stringify({ phone: phoneNumber, uid: firebaseUid }));
+        setUser({ phone: phoneNumber, uid: firebaseUid });
+        setCurrentUser(true);
         return { success: true, message: data.message };
       } else {
         return { success: false, message: data.message || 'Login failed' };
