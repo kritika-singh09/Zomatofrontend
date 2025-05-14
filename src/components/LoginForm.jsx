@@ -30,7 +30,7 @@ const sendOtp = async (e) => {
         window.recaptchaVerifier = new RecaptchaVerifier(
           auth, "recaptcha-container",
           {
-            size: "normal",
+            size: "invisible",
             callback: (response) => {
               console.log("reCAPTCHA solved");
             },
