@@ -83,53 +83,36 @@ const Otp = () => {
           }));
           localStorage.setItem("isLoggedIn", "true");
           
-          toast.success("Login successful!");
-          
-          // Use window.location for a hard redirect instead of navigate
-          setTimeout(() => {
-            window.location.href = "/";
-          }, 1500);
+         toast.success("Login successful!", {
+            onClose: () => {
+              // Only redirect after toast is closed or after 3 seconds
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 3000);
+            },
+            autoClose: 2500 // Toast will show for 2.5 seconds
+          });
         } else {
           toast.error(data.message || "Login failed. Please try again.");
           console.error("API error:", data);
+          setIsSubmitting(false);
         }
       } catch (apiError) {
         console.error("API call failed:", apiError);
         toast.error("Server error. Please try again.");
+        setIsSubmitting(false);
       }
     } else {
       toast.error("Verification failed. Please try again.");
+      setIsSubmitting(false);
     }
   } catch (error) {
     console.error("OTP verification failed:", error);
     toast.error("Invalid OTP. Please try again.");
-  } finally {
     setIsSubmitting(false);
   }
 };
 
-
-
-  //       const apiResult = await login(phone, firebaseUid);
-        
-  //       if (apiResult.success) {
-  //         toast.success("OTP verified!");
-  //         setTimeout(() => {
-  //           navigate("/", { replace: true });
-  //         }, 1000);
-  //       } else {
-  //         toast.error(apiResult.message || "Login failed. Please try again.");
-  //       }
-  //     } else {
-  //       toast.error("Verification failed. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("OTP verification failed:", error);
-  //     toast.error("Invalid OTP. Please try again.");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // }; 
     return (
       <form onSubmit={verifyOtp}>
         <div className="flex justify-around mt-10">
