@@ -54,11 +54,11 @@ const Otp = () => {
 
       // Verify with Firebase
       const result = await window.confirmationResult.confirm(combinedOtp);
-      
+      console.log("Firebase verification result:", result);
       if (result.user) {
         // Get Firebase UID
         const firebaseUid = result.user.uid;
-        
+        try{
         // Send to your backend
          const response = await fetch("https://hotelbuddhaavenue.vercel.app/api/auth/login", {
           method: "POST",
@@ -72,29 +72,41 @@ const Otp = () => {
         });
         
         const data = await response.json();
+        console.log(`data:${data}`)
         
         if (data.success) {
           toast.success("Login successful!");
           // Store user data in localStorage if needed
-          localStorage.setItem("user", JSON.stringify({ phone, firebaseUid }));
+         localStorage.setItem("user", JSON.stringify({ 
+            phone, 
+            firebaseUid,
+            // Include any other user data from the response if available
+            ...(data.user ? { userData: data.user } : {})
+          }));
           localStorage.setItem("isLoggedIn", "true");
+           toast.success("Login successful!");
           
           setTimeout(() => {
             navigate("/", { replace: true });
-          }, 1000);
+          }, 1500);
         } else {
           toast.error(data.message || "Login failed. Please try again.");
+          console.error("API error:", data);
         }
-      } else {
-        toast.error("Verification failed. Please try again.");
+        }catch (apiError) {
+        console.error("API call failed:", apiError);
+        toast.error("Server error. Please try again.");
       }
-    } catch (error) {
-      console.error("OTP verification failed:", error);
-      toast.error("Invalid OTP. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      toast.error("Verification failed. Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("OTP verification failed:", error);
+    toast.error("Invalid OTP. Please try again.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
 
 

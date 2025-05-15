@@ -40,7 +40,7 @@ const AppRoutes = () => {
         <Route path="/" element={
           <ProtectedRoute>
             <Home />
-                <CartButton />
+                {/* <CartButton /> */}
           </ProtectedRoute>
         } />
         <Route path="/login" element={

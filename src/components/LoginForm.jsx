@@ -50,7 +50,7 @@ const LoginForm = () => {
     
     // Create new instance
     window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
+      size: 'normal',
       callback: () => {},
       'expired-callback': () => {
         toast.error("reCAPTCHA expired. Please try again.");
