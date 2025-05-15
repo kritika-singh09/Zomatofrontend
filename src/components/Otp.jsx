@@ -59,24 +59,25 @@ const Otp = () => {
         // Get Firebase UID
         const firebaseUid = result.user.uid;
         try{
-         // Use the login function from context instead of direct fetch
-        const loginResult = await login(phone, firebaseUid);
+              // Store user data in localStorage directly after Firebase verification
+       localStorage.setItem("user", JSON.stringify({ 
+          phone, 
+          firebaseUid
+        }));
+        localStorage.setItem("isLoggedIn", "true");
         
-        if (loginResult.success) {
-          toast.success("Login successful!", {
-            onClose: () => {
-              // Only redirect after toast is closed or after 3 seconds
-              setTimeout(() => {
-                window.location.href = "/";
-              }, 3000);
-            },
-            autoClose: 2500 // Toast will show for 2.5 seconds
-          });
-        } else {
-          toast.error(loginResult.message || "Login failed. Please try again.");
-          console.error("Login error:", loginResult);
-          setIsSubmitting(false);
-        }
+        // Set current user in context
+        setCurrentUser(true);
+        
+        toast.success("Login successful!", {
+          onClose: () => {
+            // Only redirect after toast is closed or after 3 seconds
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 3000);
+          },
+          autoClose: 2500 // Toast will show for 2.5 seconds
+        });
       } catch (apiError) {
         console.error("API call failed:", apiError);
         toast.error("Server error. Please try again.");
@@ -92,6 +93,8 @@ const Otp = () => {
     setIsSubmitting(false);
   }
 };
+
+  
     return (
       <form onSubmit={verifyOtp}>
         <div className="flex justify-around mt-10">
