@@ -72,28 +72,28 @@ const Otp = () => {
         });
         
         const data = await response.json();
-        console.log(`data:${data}`)
+        console.log("API response data:", data)
         
-        if (data.success) {
-          toast.success("Login successful!");
-          // Store user data in localStorage if needed
-         localStorage.setItem("user", JSON.stringify({ 
+       if (data.success) {
+          // Store user data in localStorage
+          localStorage.setItem("user", JSON.stringify({ 
             phone, 
             firebaseUid,
-            // Include any other user data from the response if available
             ...(data.user ? { userData: data.user } : {})
           }));
           localStorage.setItem("isLoggedIn", "true");
-           toast.success("Login successful!");
           
+          toast.success("Login successful!");
+          
+          // Use window.location for a hard redirect instead of navigate
           setTimeout(() => {
-            navigate("/", { replace: true });
+            window.location.href = "/";
           }, 1500);
         } else {
           toast.error(data.message || "Login failed. Please try again.");
           console.error("API error:", data);
         }
-        }catch (apiError) {
+      } catch (apiError) {
         console.error("API call failed:", apiError);
         toast.error("Server error. Please try again.");
       }
