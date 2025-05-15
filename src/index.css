@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@theme{
+  --color-primary: #9f0712;
+  --color-secondary: #e7000b
+}
+
 .login-text {
   /* Default styles (applies to desktop view) */
   left: 45%;

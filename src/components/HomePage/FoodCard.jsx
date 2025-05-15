@@ -77,7 +77,7 @@ const FoodCard = memo(({ food }) => {
           <div className="mt-2 flex justify-between items-center">
             <span className="font-bold text-xs">{food.price}</span>
 
-            <button className="bg-white border border-orange-500 text-orange-500 px-2 py-0.5 rounded-md text-xs hover:bg-orange-500 hover:text-white transition-colors">
+            <button className="bg-white border border-primary text-primary px-2 py-0.5 rounded-md text-xs hover:bg-primary hover:text-white transition-colors">
               Add
             </button>
           </div>

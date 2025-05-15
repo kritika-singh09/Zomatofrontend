@@ -1,55 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { FaChevronDown, FaChevronUp, FaFilter } from 'react-icons/fa';
+import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from 'react-icons/fa';
 import { BiSolidLeaf } from 'react-icons/bi';
-import { FaStar } from 'react-icons/fa';
+import { fetchFoodItems } from '../../services/api';
+
+// Category mapping for display names
+const CATEGORY_NAMES = {
+  1: "Main Course",
+  2: "Lunch Favorites",
+  3: "Dinner Delights",
+  4: "Desserts",
+  5: "Biryani Collection",
+  6: "South Indian",
+  7: "Chinese",
+  8: "Fast Food",
+  9: "Beverages",
+  // Add more categories as needed
+};
 
 const Recommendation = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [originalCategories, setOriginalCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('Recommended');
-  const [expandedAccordion, setExpandedAccordion] = useState('Popular');
   const [activeQuickFilter, setActiveQuickFilter] = useState(null);
-  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [expandedAccordion, setExpandedAccordion] = useState(null);
 
-  // Sample filter options
   const filterOptions = ['Recommended', 'Rating', 'Price: Low to High', 'Price: High to Low', 'Delivery Time'];
-  
-  // Sample quick filter chips
   const quickFilters = ['Veg Only', 'Non-Veg', 'Less than ₹200', 'Bestseller'];
-  
-  // Sample categories and items
-  const originalCategories = [
-    {
-      name: 'Popular',
-      items: [
-        { id: 1, name: 'Chicken Biryani', price: 250, rating: 4.5, veg: false, image: 'https://via.placeholder.com/80' },
-        { id: 2, name: 'Paneer Butter Masala', price: 180, rating: 4.3, veg: true, image: 'https://via.placeholder.com/80' },
-        { id: 3, name: 'Butter Naan', price: 40, rating: 4.2, veg: true, image: 'https://via.placeholder.com/80' },
-      ]
-    },
-    {
-      name: 'Starters',
-      items: [
-        { id: 4, name: 'Chicken 65', price: 220, rating: 4.4, veg: false, image: 'https://via.placeholder.com/80' },
-        { id: 5, name: 'Paneer Tikka', price: 190, rating: 4.1, veg: true, image: 'https://via.placeholder.com/80' },
-      ]
-    },
-    {
-      name: 'Main Course',
-      items: [
-        { id: 6, name: 'Dal Makhani', price: 160, rating: 4.3, veg: true, image: 'https://via.placeholder.com/80' },
-        { id: 7, name: 'Butter Chicken', price: 280, rating: 4.6, veg: false, image: 'https://via.placeholder.com/80' },
-      ]
-    },
-    {
-      name: 'Desserts',
-      items: [
-        { id: 8, name: 'Gulab Jamun', price: 80, rating: 4.7, veg: true, image: 'https://via.placeholder.com/80' },
-        { id: 9, name: 'Rasmalai', price: 90, rating: 4.5, veg: true, image: 'https://via.placeholder.com/80' },
-      ]
-    }
-  ];
 
-   // Apply filters and sorting to categories
+  // Fetch data from API and organize by categories
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        setLoading(true);
+        const items = await fetchFoodItems();
+
+        console.log("Sample item:", items[0]);
+        
+        // Group items by category
+        const groupedItems = items.reduce((acc, item) => {
+          const categoryId = item.categoryId ? parseInt(item.categoryId) : 0;
+          const categoryName = CATEGORY_NAMES[categoryId] || `Category ${categoryId}`;
+          
+          if (!acc[categoryName]) {
+            acc[categoryName] = {
+              name: categoryName,
+              items: []
+            };
+          }
+          
+          // Add bestseller flag based on rating 
+          const enhancedItem = {
+            ...item,
+             price: parseFloat(item.price),
+            bestseller: item.rating >= 4.6,
+            deliveryTime: Math.floor(Math.random() * 20) + 20 // Random delivery time between 20-40 mins
+          };
+          
+          acc[categoryName].items.push(enhancedItem);
+          return acc;
+        }, {});
+        
+        const categoriesArray = Object.values(groupedItems);
+        console.log("Categories created:", categoriesArray.map(c => c.name));
+        setOriginalCategories(categoriesArray);
+        setFilteredCategories(categoriesArray);
+        setExpandedAccordion(categoriesArray[0]?.name); // Expand first category by default
+        
+      } catch (err) {
+        setError('Failed to load recommendations');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadItems();
+  }, []);
+
+  // Apply filters and sorting to categories
   useEffect(() => {
     // Create a deep copy of the original categories
     let newCategories = JSON.parse(JSON.stringify(originalCategories));
@@ -70,7 +101,7 @@ const Recommendation = () => {
             default:
               return true;
           }
-           });
+        });
         return { ...category, items: filteredItems };
       });
     }
@@ -87,9 +118,9 @@ const Recommendation = () => {
           sortedItems.sort((a, b) => a.price - b.price);
           break;
         case 'Price: High to Low':
-          sortedItems.sort((a, b) => b.price - a.price);
+          sortedItems.sort((a, b) =>  b.price -a.price);
           break;
-         case 'Delivery Time':
+        case 'Delivery Time':
           sortedItems.sort((a, b) => a.deliveryTime - b.deliveryTime);
           break;
         case 'Recommended':
@@ -107,10 +138,10 @@ const Recommendation = () => {
     });
     
     // Filter out categories with no items
-       newCategories = newCategories.filter(category => category.items.length > 0);
+    newCategories = newCategories.filter(category => category.items.length > 0);
     
     setFilteredCategories(newCategories);
-  }, [activeFilter, activeQuickFilter]);
+  }, [activeFilter, activeQuickFilter, originalCategories]);
 
   // Toggle filter dropdown
   const toggleFilter = () => {
@@ -131,7 +162,8 @@ const Recommendation = () => {
       setExpandedAccordion(categoryName);
     }
   };
-   // Toggle quick filter
+
+  // Toggle quick filter
   const toggleQuickFilter = (filter) => {
     if (activeQuickFilter === filter) {
       setActiveQuickFilter(null);
@@ -139,8 +171,17 @@ const Recommendation = () => {
       setActiveQuickFilter(filter);
     }
   };
-   // Check if a non-default filter is active
+
+  // Check if a non-default filter is active
   const isNonDefaultFilterActive = activeFilter !== 'Recommended';
+
+  if (loading) {
+    return <div className="p-3 bg-white">Loading recommendations...</div>;
+  }
+
+  if (error) {
+    return <div className="p-3 bg-white text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-3 bg-white">
@@ -202,7 +243,7 @@ const Recommendation = () => {
       </div>
       
       {/* Category accordions */}
-  <div className="space-y-3">
+      <div className="space-y-3">
         {filteredCategories.length > 0 ? (
           filteredCategories.map((category) => (
             <div key={category.name} className="border border-gray-200 rounded-md overflow-hidden">
@@ -250,19 +291,15 @@ const Recommendation = () => {
                               </span>
                               <span className="text-xs text-gray-500">• {item.deliveryTime || 30}-{(item.deliveryTime || 30) + 5} mins</span>
                             </div>
-                            <p className="text-sm mt-1">₹{item.price}</p>
                           </div>
-                          
-                          {/* Add button */}
-                          <button className="border border-gray-300 text-green-600 font-medium rounded-md px-3 py-1 text-sm hover:bg-green-50">
-                            ADD
-                          </button>
+                          <div className="text-right">
+                            <div className="font-medium">{item.priceFormatted}</div>
+                            <button className="mt-1 bg-white border border-red-800 text-red-800 text-xs px-3 py-1 rounded-md hover:bg-red-800 hover:text-white transition-colors">
+                              Add
+                            </button>
+                          </div>
                         </div>
-                        
-                        {/* Item description - optional */}
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                          Delicious {item.name.toLowerCase()} prepared with finest ingredients.
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
                       </div>
                     </div>
                   ))}
@@ -271,22 +308,9 @@ const Recommendation = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-8 text-gray-500">
-            No items match your selected filters
-          </div>
+          <div className="text-center py-4 text-gray-500">No items match your filters</div>
         )}
       </div>
-      
-      {/* Add custom scrollbar styles */}
-      <style jsx>{`
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };
