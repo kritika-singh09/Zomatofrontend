@@ -59,31 +59,11 @@ const Otp = () => {
         // Get Firebase UID
         const firebaseUid = result.user.uid;
         try{
-        // Send to your backend
-         const response = await fetch("https://hotelbuddhaavenue.vercel.app/api/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone,
-            firebaseUid
-          }),
-        });
+         // Use the login function from context instead of direct fetch
+        const loginResult = await login(phone, firebaseUid);
         
-        const data = await response.json();
-        console.log("API response data:", data)
-        
-       if (data.success) {
-          // Store user data in localStorage
-          localStorage.setItem("user", JSON.stringify({ 
-            phone, 
-            firebaseUid,
-            ...(data.user ? { userData: data.user } : {})
-          }));
-          localStorage.setItem("isLoggedIn", "true");
-          
-         toast.success("Login successful!", {
+        if (loginResult.success) {
+          toast.success("Login successful!", {
             onClose: () => {
               // Only redirect after toast is closed or after 3 seconds
               setTimeout(() => {
@@ -93,8 +73,8 @@ const Otp = () => {
             autoClose: 2500 // Toast will show for 2.5 seconds
           });
         } else {
-          toast.error(data.message || "Login failed. Please try again.");
-          console.error("API error:", data);
+          toast.error(loginResult.message || "Login failed. Please try again.");
+          console.error("Login error:", loginResult);
           setIsSubmitting(false);
         }
       } catch (apiError) {
@@ -112,7 +92,6 @@ const Otp = () => {
     setIsSubmitting(false);
   }
 };
-
     return (
       <form onSubmit={verifyOtp}>
         <div className="flex justify-around mt-10">
