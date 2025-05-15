@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../config/firebase";
-import Login from "../pages/Login";
+
 
 const Otp = () => {
   const { phone, otp, setOtp,login,  verifyOTP, setCurrentUser } = useAppContext();
@@ -50,6 +48,7 @@ const Otp = () => {
     try {
       if (!window.confirmationResult) {
         toast.error("OTP session expired. Please resend OTP.");
+         setIsSubmitting(false);
         return;
       }
 
@@ -61,15 +60,30 @@ const Otp = () => {
         const firebaseUid = result.user.uid;
         
         // Send to your backend
-        const apiResult = await login(phone, firebaseUid);
+         const response = await fetch("https://hotelbuddhaavenue.vercel.app/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            phone,
+            firebaseUid
+          }),
+        });
         
-        if (apiResult.success) {
-          toast.success("OTP verified!");
+        const data = await response.json();
+        
+        if (data.success) {
+          toast.success("Login successful!");
+          // Store user data in localStorage if needed
+          localStorage.setItem("user", JSON.stringify({ phone, firebaseUid }));
+          localStorage.setItem("isLoggedIn", "true");
+          
           setTimeout(() => {
             navigate("/", { replace: true });
           }, 1000);
         } else {
-          toast.error(apiResult.message || "Login failed. Please try again.");
+          toast.error(data.message || "Login failed. Please try again.");
         }
       } else {
         toast.error("Verification failed. Please try again.");
@@ -80,7 +94,30 @@ const Otp = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }; 
+  };
+
+
+
+  //       const apiResult = await login(phone, firebaseUid);
+        
+  //       if (apiResult.success) {
+  //         toast.success("OTP verified!");
+  //         setTimeout(() => {
+  //           navigate("/", { replace: true });
+  //         }, 1000);
+  //       } else {
+  //         toast.error(apiResult.message || "Login failed. Please try again.");
+  //       }
+  //     } else {
+  //       toast.error("Verification failed. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("OTP verification failed:", error);
+  //     toast.error("Invalid OTP. Please try again.");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // }; 
     return (
       <form onSubmit={verifyOtp}>
         <div className="flex justify-around mt-10">

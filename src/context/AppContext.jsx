@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export const AppContext = createContext();
 
-const API_URL = "https://backend2-umber-zeta.vercel.app";
+const API_URL = "https://hotelbuddhaavenue.vercel.app/";
 
 
 export const AppContextProvider = ({ children }) => {

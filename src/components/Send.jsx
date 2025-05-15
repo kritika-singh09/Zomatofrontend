@@ -2,36 +2,81 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const Send = () => {
   const { phone } = useAppContext();
   const navigate = useNavigate();
   const [timer, setTimer] = React.useState(15);
-  const [isResendDisabled, setIsResendDisabled] = React.useState(false);
+  const [isResendDisabled, setIsResendDisabled] = React.useState(true);
 
   React.useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
         setTimer((prev) => prev - 1);
-      }, 2000);
+      }, 1000);
       return () => clearInterval(interval);
     } else {
       setIsResendDisabled(false);
     }
   }, [timer]);
 
-  const handleResend = () => {
+  const handleResend = async () => {
+      if (!phone || phone.length !== 10) {
+      toast.error("Invalid phone number");
+      navigate('/');
+      return;
+    }
     setTimer(15);
     setIsResendDisabled(true);
     // Add logic to resend SMS here
-    console.log("Resending SMS...");
+    // console.log("Resending SMS...");
+ 
+    try {
+      // Clear existing recaptcha if any
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        delete window.recaptchaVerifier;
+      }
+      
+      // Create invisible recaptcha verifier
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: () => {
+          console.log('reCAPTCHA verified');
+        }
+      });
+      
+      const appVerifier = window.recaptchaVerifier;
+      
+      // Send OTP via Firebase
+      const confirmation = await signInWithPhoneNumber(
+        auth,
+        "+91" + phone,
+        appVerifier
+      );
+      
+      if (confirmation) {
+        window.confirmationResult = confirmation;
+        toast.success("OTP resent successfully!");
+      } else {
+        toast.error("Failed to send OTP");
+        setIsResendDisabled(false);
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast.error("Failed to send OTP. Please try again.");
+      setIsResendDisabled(false);
+    }
   };
 
-    const handleResendOtp = () => {
-    // Navigate back to login page to resend OTP
-    navigate('/');
-    toast.info("Please request a new OTP");
-  };
+
+  //   const handleResendOtp = () => {
+  //   // Navigate back to login page to resend OTP
+  //   navigate('/');
+  //   toast.info("Please request a new OTP");
+  // };
 
   const handleChangeNumber = () => {
     // Navigate back to login page to change number
@@ -53,9 +98,9 @@ const Send = () => {
       <div className="text-center">
           <p className="text-gray-600">
         <button onClick={handleChangeNumber} className="text-red-800 font-medium">Change phone number</button>
-      </p>
-      
+      </p>    
       </div>
+      <div id="recaptcha-container"></div>
       </>
   );
 };
