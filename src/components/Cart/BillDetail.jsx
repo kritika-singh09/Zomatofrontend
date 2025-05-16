@@ -27,7 +27,7 @@ const BillDetail = ({
   return (
     <>
       {/* Total bill row with dropdown toggle */}
-      <div className="mt-6 pt-4 border-t border-gray-200">
+      <div className=" border-t border-gray-200">
         <div
           className="flex justify-between font-bold text-lg mt-4 cursor-pointer"
           onClick={toggleDetails}

@@ -3,23 +3,23 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
-
 const Otp = () => {
-  const { phone, otp, setOtp,login,  verifyOTP, setCurrentUser } = useAppContext();
+  const { phone, otp, setOtp, login, verifyOTP, setCurrentUser } =
+    useAppContext();
   const navigate = useNavigate();
   const [otpInputs, setOtpInputs] = useState(["", "", "", "", "", ""]);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOtpChange = (index, value) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
       const newOtpInputs = [...otpInputs];
       newOtpInputs[index] = value;
       setOtpInputs(newOtpInputs);
-      
+
       // Combine all inputs to form the complete OTP
       const combinedOtp = newOtpInputs.join("");
       setOtp(combinedOtp);
-      
+
       // Auto-focus next input field
       if (value !== "" && index < 5) {
         const nextInput = document.getElementById(`otp-input-${index + 1}`);
@@ -35,7 +35,7 @@ const Otp = () => {
       if (prevInput) prevInput.focus();
     }
   };
-  
+
   const verifyOtp = async (e) => {
     e.preventDefault();
     const combinedOtp = otpInputs.join("");
@@ -48,7 +48,7 @@ const Otp = () => {
     try {
       if (!window.confirmationResult) {
         toast.error("OTP session expired. Please resend OTP.");
-         setIsSubmitting(false);
+        setIsSubmitting(false);
         return;
       }
 
@@ -58,44 +58,48 @@ const Otp = () => {
       if (result.user) {
         // Get Firebase UID
         const firebaseUid = result.user.uid;
-        try{
-              // Store user data in localStorage directly after Firebase verification
-       localStorage.setItem("user", JSON.stringify({ 
-          phone, 
-          firebaseUid
-        }));
-        localStorage.setItem("isLoggedIn", "true");
-        
-        // Set current user in context
-        setCurrentUser(true);
-        
-        toast.success("Login successful!", {
-          onClose: () => {
-            // Only redirect after toast is closed or after 3 seconds
-            setTimeout(() => {
-              window.location.href = "/";
-            }, 3000);
-          },
-          autoClose: 2500 // Toast will show for 2.5 seconds
-        });
-      } catch (apiError) {
-        console.error("API call failed:", apiError);
-        toast.error("Server error. Please try again.");
+        try {
+          // Store user data in localStorage directly after Firebase verification
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              phone,
+              firebaseUid,
+            })
+          );
+          localStorage.setItem("isLoggedIn", "true");
+
+          // Set current user in context
+          setCurrentUser(true);
+
+          toast.success("Login successful!", {
+            onClose: () => {
+              // Only redirect after toast is closed or after 3 seconds
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 3000);
+            },
+            autoClose: 2500, // Toast will show for 2.5 seconds
+          });
+        } catch (apiError) {
+          console.error("API call failed:", apiError);
+          toast.error("Server error. Please try again.");
+          setIsSubmitting(false);
+        }
+      } else {
+        toast.error("Verification failed. Please try again.");
         setIsSubmitting(false);
       }
-    } else {
-      toast.error("Verification failed. Please try again.");
+    } catch (error) {
+      console.error("OTP verification failed:", error);
+      toast.error("Invalid OTP. Please try again.");
       setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error("OTP verification failed:", error);
-    toast.error("Invalid OTP. Please try again.");
-    setIsSubmitting(false);
-  }
-};
+  };
 
-  
-    return (
+  return (
+    <>
+      <h1 className="mx-10">OTP Verification</h1>
       <form onSubmit={verifyOtp}>
         <div className="flex justify-around mt-10">
           {otpInputs.map((digit, index) => (
@@ -117,71 +121,17 @@ const Otp = () => {
         </div>
         <div className="text-center mt-6">
           <button
-          type="submit"
-          className={`w-[250px] py-2.5 px-1.5 rounded-md bg-red-800 text-white ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Verifying...' : 'Verify OTP'}
-        </button>
+            type="submit"
+            className={`w-[250px] py-2.5 px-1.5 rounded-md bg-red-800 text-white ${
+              isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Verifying..." : "Verify OTP"}
+          </button>
         </div>
       </form>
-      // <div className="flex justify-around mt-10">
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300 text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300 text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300 text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300 text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300  text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      //   <input
-      //     type="number"
-      //     className="h-[50px] w-[40px] border border-grey-300  text-center text-2xl rounded-lg"
-      //     required
-      //     maxLength="1"
-      //     onInput={(e) => {
-      //       e.target.value = e.target.value.slice(0, 1);
-      //     }}
-      //   />
-      // </div>
-    );
-  
+    </>
+  );
 };
 export default Otp;

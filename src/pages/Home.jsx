@@ -3,6 +3,7 @@ import Header from '../components/HomePage/Header'
 import FoodSlider from '../components/HomePage/FoodSlider'
 import Recommendation from '../components/itemDetail/Recommendation'
 import FoodItemGrid from '../components/HomePage/FoodItemGrid'
+import CartButton from '../components/CartButton'
 
 const Home = () => {
   return (
@@ -10,7 +11,8 @@ const Home = () => {
       <Header />
       <FoodSlider />
       <FoodItemGrid/>
-      <Recommendation/>
+      <Recommendation />
+      <CartButton />
     </div>
   )
 }

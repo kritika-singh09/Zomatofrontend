@@ -1,38 +1,20 @@
 import React, { useState } from "react";
 import CartItem from "./CartItem";
 import { GrNotes } from "react-icons/gr";
-import { FaTimes } from "react-icons/fa";
+import { FaPlus, FaTimes } from "react-icons/fa";
 import BillDetail from "./BillDetail";
 import AddressPanel from "./AddressPanel";
+import { useAppContext } from "../../context/AppContext";
 
 const CartPage = () => {
   // Sample cart items - in a real app, this would come from context or state management
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Butter Chicken",
-      restaurant: "Mughlai Cuisine",
-      price: "₹249.60",
-      quantity: 1,
-      veg: false,
-    },
-    {
-      id: 2,
-      name: "Margherita Pizza",
-      restaurant: "Pizza",
-      price: "₹199",
-      quantity: 1,
-      veg: true,
-    },
-    {
-      id: 6,
-      name: "Masala Dosa",
-      restaurant: "South Indian",
-      price: "₹120",
-      quantity: 1,
-      veg: true,
-    },
-  ]);
+  const { cart, updateCartItemQuantity, removeFromCart } = useAppContext();
+
+  const formattedCart = cart.map((item) => ({
+    ...item,
+    price: typeof item.price === "string" ? item.price : `₹${item.price}`,
+  }));
+
   const [instructions, setInstructions] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
   const [showBillDetails, setShowBillDetails] = useState(false);
@@ -45,28 +27,28 @@ const CartPage = () => {
       handleRemoveItem(itemId);
       return;
     }
-
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+    updateCartItemQuantity(itemId, newQuantity);
   };
 
   // Remove item handler
   const handleRemoveItem = (itemId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+    removeFromCart(itemId);
   };
 
   // Navigate to menu to add more items
   const handleAddMore = () => {
     // Navigate to menu or show menu modal
-    alert("Navigate to menu to add more items");
+    window.history.back();
   };
 
   // Calculate subtotal
-  const subtotal = cartItems.reduce((total, item) => {
-    const price = parseFloat(item.price.replace(/[^\d.]/g, "")) || 0;
+  const subtotal = cart.reduce((total, item) => {
+    // Handle price whether it's a number or string
+    const price =
+      typeof item.price === "number"
+        ? item.price
+        : parseFloat(item.price?.toString().replace(/[^\d.]/g, "")) || 0;
+
     return total + price * item.quantity;
   }, 0);
 
@@ -80,12 +62,11 @@ const CartPage = () => {
   const handleSelectAddress = (address) => {
     setSelectedAddress(address);
     console.log("Selected address:", address);
-    // Here you would typically proceed to the next step in the checkout process
   };
 
   return (
-    <div className="p-4">
-      {cartItems.length === 0 ? (
+    <div className="p-4 pb-32">
+      {cart.length === 0 ? (
         <div className="bg-white p-8 text-center">
           <p className="text-gray-500 mb-4">Your cart is empty</p>
           <button
@@ -98,7 +79,7 @@ const CartPage = () => {
       ) : (
         <div className="bg-white rounded-lg shadow-md p-4">
           {/* Cart items */}
-          {cartItems.map((item) => (
+          {formattedCart.map((item) => (
             <CartItem
               key={item.id}
               item={item}
@@ -107,7 +88,15 @@ const CartPage = () => {
               onAddMore={handleAddMore}
             />
           ))}
-
+          {/* Add more items button */}
+          <div className="mt-4 mb-4 pb-2 border-b border-gray-200">
+            <button
+              className="text-orange-500 font-medium flex items-center cursor-pointer"
+              onClick={handleAddMore}
+            >
+              <FaPlus size={14} className="mr-2" /> Add more items
+            </button>
+          </div>
           <div className="mt-6 border-gray-200">
             {!showInstructions ? (
               <div className="flex items-center relative">
@@ -149,7 +138,17 @@ const CartPage = () => {
               </span>
             </div>
           </div>
-
+          {/* Address Panel Component */}
+          <AddressPanel
+            showPanel={showAddressPanel}
+            togglePanel={() => setShowAddressPanel(!showAddressPanel)}
+            onSelectAddress={handleSelectAddress}
+          />
+        </div>
+      )}
+      {/* Fixed bottom section with bill details and address button */}
+      {cart.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 p-4">
           {/* Bill Details Component with sliding panel */}
           <BillDetail
             subtotal={subtotal}
@@ -161,18 +160,11 @@ const CartPage = () => {
           />
 
           <button
-            className="cursor-pointer w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-4 hover:bg-green-800"
+            className="cursor-pointer w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-2 hover:bg-green-800"
             onClick={() => setShowAddressPanel(true)}
           >
             Select Address at next step
           </button>
-
-          {/* Address Panel Component */}
-          <AddressPanel
-            showPanel={showAddressPanel}
-            togglePanel={() => setShowAddressPanel(!showAddressPanel)}
-            onSelectAddress={handleSelectAddress}
-          />
         </div>
       )}
     </div>

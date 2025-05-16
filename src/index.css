@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
-@theme{
+@theme {
   --color-primary: #9f0712;
-  --color-secondary: #e7000b
+  --color-secondary: rgba(219, 69, 76, 0.95);
+  --color-light: #ffe2e2;
 }
 
 .login-text {
@@ -17,20 +18,20 @@
   }
 }
 
-.otpForm{
+.otpForm {
   max-width: 500px;
   margin: 0 auto 0 auto;
 }
 
-.bannerImg{
+.bannerImg {
   width: 100%;
   height: 250px;
   object-fit: cover;
 }
 
 @media (max-width: 768px) {
-  .bannerImg{
+  .bannerImg {
     height: 220px;
     object-fit: cover;
   }
-} 
+}

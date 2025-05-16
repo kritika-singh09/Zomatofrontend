@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from 'react-icons/fa';
 import { BiSolidLeaf } from 'react-icons/bi';
 import { fetchFoodItems } from '../../services/api';
+import { useAppContext } from '../../context/AppContext';
+import { AiOutlineMinus, AiOutlinePlus } from 'react-icons/ai';
 
 // Category mapping for display names
 const CATEGORY_NAMES = {
@@ -26,6 +28,13 @@ const Recommendation = () => {
   const [activeFilter, setActiveFilter] = useState('Recommended');
   const [activeQuickFilter, setActiveQuickFilter] = useState(null);
   const [expandedAccordion, setExpandedAccordion] = useState(null);
+
+  const { addToCart, cart, removeFromCart, updateCartItemQuantity } = useAppContext();
+
+  const getItemQuantityInCart = (itemId) => {
+  const cartItem = cart.find(item => item.id === itemId);
+  return cartItem ? cartItem.quantity : 0;
+};
 
   const filterOptions = ['Recommended', 'Rating', 'Price: Low to High', 'Price: High to Low', 'Delivery Time'];
   const quickFilters = ['Veg Only', 'Non-Veg', 'Less than ₹200', 'Bestseller'];
@@ -293,11 +302,49 @@ const Recommendation = () => {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-medium">{item.priceFormatted}</div>
-                            <button className="mt-1 bg-white border border-red-800 text-red-800 text-xs px-3 py-1 rounded-md hover:bg-red-800 hover:text-white transition-colors">
-                              Add
-                            </button>
-                          </div>
+  <div className="font-medium">{item.priceFormatted || `₹${item.price}`}</div>
+  {getItemQuantityInCart(item.id) > 0 ? (
+    <div className="mt-1 flex items-center justify-end">
+      <button 
+        className="w-6 h-6 bg-red-800 text-white rounded-l-md flex items-center justify-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          const currentQty = getItemQuantityInCart(item.id);
+          if (currentQty === 1) {
+            removeFromCart(item.id);
+          } else {
+            updateCartItemQuantity(item.id, currentQty - 1);
+          }
+        }}
+      >
+        <AiOutlineMinus size={12} />
+      </button>
+      <span className="w-6 h-6 bg-white border-t border-b border-gray-300 flex items-center justify-center text-xs">
+        {getItemQuantityInCart(item.id)}
+      </span>
+      <button 
+        className="w-6 h-6 bg-red-800 text-white rounded-r-md flex items-center justify-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          const currentQty = getItemQuantityInCart(item.id);
+          updateCartItemQuantity(item.id, currentQty + 1);
+        }}
+      >
+        <AiOutlinePlus size={12} />
+      </button>
+    </div>
+  ) : (
+    <button 
+      className="mt-1 bg-white border border-red-800 text-red-800 text-xs px-3 py-1 rounded-md hover:bg-red-800 hover:text-white transition-colors"
+      onClick={(e) => {
+        e.stopPropagation();
+        addToCart(item);
+      }}
+    >
+      Add
+    </button>
+  )}
+</div>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">{item.description}</p>
                       </div>
