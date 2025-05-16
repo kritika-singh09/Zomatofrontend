@@ -6,6 +6,7 @@ import { GiNoodles, GiChickenLeg, GiCupcake } from "react-icons/gi";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 import AddToCartButton from "../AddToCart";
+import { VscDiffModified } from "react-icons/vsc";
 
 // Icon mapping object
 const IconMap = {
@@ -68,24 +69,30 @@ const FoodCard = memo(({ food }) => {
           />
 
           {/* Tag */}
-          <div
+          {/* <div
             className={`absolute top-2 left-2 ${food.tagBg} px-2 py-1 rounded-full flex items-center`}
           >
             {TagIcon && <TagIcon className={food.tagIconColor} />}
             <span className="ml-1 text-xs font-medium">{food.tag}</span>
-          </div>
+          </div> */}
         </div>
 
         {/* Food Details */}
         <div className="p-2">
-          <h3 className="font-bold text-sm truncate">{food.name}</h3>
+          <div className="flex items-center">
+            <h3 className="font-bold text-sm truncate">{food.name}</h3>
+            <div className="ml-1">
+              {food.veg ? (
+                <VscDiffModified className="text-green-600" />
+              ) : (
+                <VscDiffModified className="text-red-600" />
+              )}
+            </div>
+          </div>
           <div className="flex mb-1 items-center mt-1">
             <FaStar className="text-yellow-500 text-xs" />
             <span className="ml-1 text-xs">{food.rating}</span>
             <span className="mx-1 text-gray-300 text-xs">•</span>
-            {/* <span className="text-xs text-gray-600 truncate">
-              {food.restaurant}
-            </span> */}
           </div>
           <div className="item-actions">
             <AddToCartButton item={food} />

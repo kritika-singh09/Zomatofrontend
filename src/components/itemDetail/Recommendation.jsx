@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from 'react-icons/fa';
-import { BiSolidLeaf } from 'react-icons/bi';
-import { fetchFoodItems } from '../../services/api';
-import { useAppContext } from '../../context/AppContext';
-import { AiOutlineMinus, AiOutlinePlus } from 'react-icons/ai';
+import React, { useState, useEffect } from "react";
+import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa";
+import { BiSolidLeaf } from "react-icons/bi";
+import { fetchFoodItems } from "../../services/api";
+import { useAppContext } from "../../context/AppContext";
+import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
+import AddToCartButton from "../AddToCart";
 
 // Category mapping for display names
 const CATEGORY_NAMES = {
@@ -19,25 +20,32 @@ const CATEGORY_NAMES = {
   // Add more categories as needed
 };
 
-const Recommendation = () => {
+const Recommendation = ({ food }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [originalCategories, setOriginalCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('Recommended');
+  const [activeFilter, setActiveFilter] = useState("Recommended");
   const [activeQuickFilter, setActiveQuickFilter] = useState(null);
   const [expandedAccordion, setExpandedAccordion] = useState(null);
 
-  const { addToCart, cart, removeFromCart, updateCartItemQuantity } = useAppContext();
+  const { addToCart, cart, removeFromCart, updateCartItemQuantity } =
+    useAppContext();
 
   const getItemQuantityInCart = (itemId) => {
-  const cartItem = cart.find(item => item.id === itemId);
-  return cartItem ? cartItem.quantity : 0;
-};
+    const cartItem = cart.find((item) => item.id === itemId);
+    return cartItem ? cartItem.quantity : 0;
+  };
 
-  const filterOptions = ['Recommended', 'Rating', 'Price: Low to High', 'Price: High to Low', 'Delivery Time'];
-  const quickFilters = ['Veg Only', 'Non-Veg', 'Less than ₹200', 'Bestseller'];
+  const filterOptions = [
+    "Recommended",
+    "Rating",
+    "Price: Low to High",
+    "Price: High to Low",
+    "Delivery Time",
+  ];
+  const quickFilters = ["Veg Only", "Non-Veg", "Less than ₹200", "Bestseller"];
 
   // Fetch data from API and organize by categories
   useEffect(() => {
@@ -47,39 +55,42 @@ const Recommendation = () => {
         const items = await fetchFoodItems();
 
         console.log("Sample item:", items[0]);
-        
+
         // Group items by category
         const groupedItems = items.reduce((acc, item) => {
           const categoryId = item.categoryId ? parseInt(item.categoryId) : 0;
-          const categoryName = CATEGORY_NAMES[categoryId] || `Category ${categoryId}`;
-          
+          const categoryName =
+            CATEGORY_NAMES[categoryId] || `Category ${categoryId}`;
+
           if (!acc[categoryName]) {
             acc[categoryName] = {
               name: categoryName,
-              items: []
+              items: [],
             };
           }
-          
-          // Add bestseller flag based on rating 
+
+          // Add bestseller flag based on rating
           const enhancedItem = {
             ...item,
-             price: parseFloat(item.price),
+            price: parseFloat(item.price),
             bestseller: item.rating >= 4.6,
-            deliveryTime: Math.floor(Math.random() * 20) + 20 // Random delivery time between 20-40 mins
+            deliveryTime: Math.floor(Math.random() * 20) + 20, // Random delivery time between 20-40 mins
           };
-          
+
           acc[categoryName].items.push(enhancedItem);
           return acc;
         }, {});
-        
+
         const categoriesArray = Object.values(groupedItems);
-        console.log("Categories created:", categoriesArray.map(c => c.name));
+        console.log(
+          "Categories created:",
+          categoriesArray.map((c) => c.name)
+        );
         setOriginalCategories(categoriesArray);
         setFilteredCategories(categoriesArray);
         setExpandedAccordion(categoriesArray[0]?.name); // Expand first category by default
-        
       } catch (err) {
-        setError('Failed to load recommendations');
+        setError("Failed to load recommendations");
         console.error(err);
       } finally {
         setLoading(false);
@@ -93,19 +104,19 @@ const Recommendation = () => {
   useEffect(() => {
     // Create a deep copy of the original categories
     let newCategories = JSON.parse(JSON.stringify(originalCategories));
-    
+
     // Apply quick filter if active
     if (activeQuickFilter) {
-      newCategories = newCategories.map(category => {
-        const filteredItems = category.items.filter(item => {
+      newCategories = newCategories.map((category) => {
+        const filteredItems = category.items.filter((item) => {
           switch (activeQuickFilter) {
-            case 'Veg Only':
+            case "Veg Only":
               return item.veg;
-            case 'Non-Veg':
+            case "Non-Veg":
               return !item.veg;
-            case 'Less than ₹200':
+            case "Less than ₹200":
               return item.price < 200;
-            case 'Bestseller':
+            case "Bestseller":
               return item.bestseller;
             default:
               return true;
@@ -114,25 +125,25 @@ const Recommendation = () => {
         return { ...category, items: filteredItems };
       });
     }
-    
+
     // Apply sorting based on active filter
-    newCategories = newCategories.map(category => {
+    newCategories = newCategories.map((category) => {
       let sortedItems = [...category.items];
-      
+
       switch (activeFilter) {
-        case 'Rating':
+        case "Rating":
           sortedItems.sort((a, b) => b.rating - a.rating);
           break;
-        case 'Price: Low to High':
+        case "Price: Low to High":
           sortedItems.sort((a, b) => a.price - b.price);
           break;
-        case 'Price: High to Low':
-          sortedItems.sort((a, b) =>  b.price -a.price);
+        case "Price: High to Low":
+          sortedItems.sort((a, b) => b.price - a.price);
           break;
-        case 'Delivery Time':
+        case "Delivery Time":
           sortedItems.sort((a, b) => a.deliveryTime - b.deliveryTime);
           break;
-        case 'Recommended':
+        case "Recommended":
         default:
           // For recommended, prioritize bestsellers and higher ratings
           sortedItems.sort((a, b) => {
@@ -142,13 +153,15 @@ const Recommendation = () => {
           });
           break;
       }
-      
+
       return { ...category, items: sortedItems };
     });
-    
+
     // Filter out categories with no items
-    newCategories = newCategories.filter(category => category.items.length > 0);
-    
+    newCategories = newCategories.filter(
+      (category) => category.items.length > 0
+    );
+
     setFilteredCategories(newCategories);
   }, [activeFilter, activeQuickFilter, originalCategories]);
 
@@ -182,7 +195,7 @@ const Recommendation = () => {
   };
 
   // Check if a non-default filter is active
-  const isNonDefaultFilterActive = activeFilter !== 'Recommended';
+  const isNonDefaultFilterActive = activeFilter !== "Recommended";
 
   if (loading) {
     return <div className="p-3 bg-white">Loading recommendations...</div>;
@@ -195,34 +208,46 @@ const Recommendation = () => {
   return (
     <div className="p-3 bg-white">
       <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
-      
+
       {/* Filter section */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
           {/* Filter dropdown */}
           <div className="relative">
-            <button 
+            <button
               className={`flex items-center gap-2 border rounded-2xl px-3 py-1 text-xs mr-1 transition-colors ${
-                isNonDefaultFilterActive 
-                  ? 'border-red-800 bg-red-50 text-red-800' 
-                  : 'border-gray-300 text-gray-700'
+                isNonDefaultFilterActive
+                  ? "border-red-800 bg-red-50 text-red-800"
+                  : "border-gray-300 text-gray-700"
               }`}
               onClick={toggleFilter}
             >
-              <FaFilter className={isNonDefaultFilterActive ? "text-red-800" : "text-gray-500"} />
+              <FaFilter
+                className={
+                  isNonDefaultFilterActive ? "text-red-800" : "text-gray-500"
+                }
+              />
               <span>Filter</span>
-              <FaChevronDown className={`transition-transform ${isFilterOpen ? 'rotate-180' : ''} ${
-                isNonDefaultFilterActive ? 'text-red-800' : 'text-gray-500'
-              }`} />
+              <FaChevronDown
+                className={`transition-transform ${
+                  isFilterOpen ? "rotate-180" : ""
+                } ${
+                  isNonDefaultFilterActive ? "text-red-800" : "text-gray-500"
+                }`}
+              />
             </button>
-            
+
             {/* Filter dropdown menu */}
             {isFilterOpen && (
               <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-20">
                 {filterOptions.map((option) => (
                   <button
                     key={option}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${activeFilter === option ? 'bg-red-50 text-red-800 font-medium' : ''}`}
+                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+                      activeFilter === option
+                        ? "bg-red-50 text-red-800 font-medium"
+                        : ""
+                    }`}
                     onClick={() => selectFilter(option)}
                   >
                     {option}
@@ -231,16 +256,16 @@ const Recommendation = () => {
               </div>
             )}
           </div>
-          
+
           {/* Quick filter chips */}
           <div className="flex gap-2 overflow-x-auto hide-scrollbar">
             {quickFilters.map((filter) => (
               <button
                 key={filter}
                 className={`whitespace-nowrap text-xs border rounded-full px-3 py-1 transition-colors ${
-                  activeQuickFilter === filter 
-                    ? 'bg-red-800 text-white border-red-800' 
-                    : 'border-gray-300 hover:bg-gray-100'
+                  activeQuickFilter === filter
+                    ? "bg-red-800 text-white border-red-800"
+                    : "border-gray-300 hover:bg-gray-100"
                 }`}
                 onClick={() => toggleQuickFilter(filter)}
               >
@@ -250,33 +275,42 @@ const Recommendation = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Category accordions */}
       <div className="space-y-3">
         {filteredCategories.length > 0 ? (
           filteredCategories.map((category) => (
-            <div key={category.name} className="border border-gray-200 rounded-md overflow-hidden">
+            <div
+              key={category.name}
+              className="border border-gray-200 rounded-md overflow-hidden"
+            >
               {/* Accordion header */}
               <button
                 className="w-full flex items-center justify-between p-3 bg-gray-50 text-left"
                 onClick={() => toggleAccordion(category.name)}
               >
-                <span className="font-medium">{category.name} ({category.items.length})</span>
-                {expandedAccordion === category.name ? <FaChevronUp /> : <FaChevronDown />}
+                <span className="font-medium">
+                  {category.name} ({category.items.length})
+                </span>
+                {expandedAccordion === category.name ? (
+                  <FaChevronUp />
+                ) : (
+                  <FaChevronDown />
+                )}
               </button>
-              
+
               {/* Accordion content */}
               {expandedAccordion === category.name && (
                 <div className="p-3 space-y-4">
                   {category.items.map((item) => (
                     <div key={item.id} className="flex gap-3">
                       {/* Item image */}
-                      <img 
-                        src={item.image} 
-                        alt={item.name} 
+                      <img
+                        src={item.image}
+                        alt={item.name}
                         className="w-20 h-20 object-cover rounded-md"
                       />
-                      
+
                       {/* Item details */}
                       <div className="flex-1">
                         <div className="flex items-start justify-between">
@@ -296,57 +330,78 @@ const Recommendation = () => {
                             </h3>
                             <div className="flex items-center gap-1 mt-1">
                               <span className="bg-green-600 text-white text-xs px-1 rounded flex items-center">
-                                {item.rating} <FaStar className="ml-0.5 text-[8px]" />
+                                {item.rating}{" "}
+                                <FaStar className="ml-0.5 text-[8px]" />
                               </span>
-                              <span className="text-xs text-gray-500">• {item.deliveryTime || 30}-{(item.deliveryTime || 30) + 5} mins</span>
+                              <span className="text-xs text-gray-500">
+                                • {item.deliveryTime || 30}-
+                                {(item.deliveryTime || 30) + 5} mins
+                              </span>
                             </div>
                           </div>
                           <div className="text-right">
-  <div className="font-medium">{item.priceFormatted || `₹${item.price}`}</div>
-  {getItemQuantityInCart(item.id) > 0 ? (
-    <div className="mt-1 flex items-center justify-end">
-      <button 
-        className="w-6 h-6 bg-red-800 text-white rounded-l-md flex items-center justify-center"
-        onClick={(e) => {
-          e.stopPropagation();
-          const currentQty = getItemQuantityInCart(item.id);
-          if (currentQty === 1) {
-            removeFromCart(item.id);
-          } else {
-            updateCartItemQuantity(item.id, currentQty - 1);
-          }
-        }}
-      >
-        <AiOutlineMinus size={12} />
-      </button>
-      <span className="w-6 h-6 bg-white border-t border-b border-gray-300 flex items-center justify-center text-xs">
-        {getItemQuantityInCart(item.id)}
-      </span>
-      <button 
-        className="w-6 h-6 bg-red-800 text-white rounded-r-md flex items-center justify-center"
-        onClick={(e) => {
-          e.stopPropagation();
-          const currentQty = getItemQuantityInCart(item.id);
-          updateCartItemQuantity(item.id, currentQty + 1);
-        }}
-      >
-        <AiOutlinePlus size={12} />
-      </button>
-    </div>
-  ) : (
-    <button 
-      className="mt-1 bg-white border border-red-800 text-red-800 text-xs px-3 py-1 rounded-md hover:bg-red-800 hover:text-white transition-colors"
-      onClick={(e) => {
-        e.stopPropagation();
-        addToCart(item);
-      }}
-    >
-      Add
-    </button>
-  )}
-</div>
+                            <div className="font-medium">
+                              {item.priceFormatted || `₹${item.price}`}
+                            </div>
+                            <div className="item-actions">
+                              <AddToCartButton item={item} />
+                            </div>
+                            {/* {getItemQuantityInCart(item.id) > 0 ? (
+                              <div className="mt-1 flex items-center justify-end">
+                                <button
+                                  className="w-6 h-6 bg-red-800 text-white rounded-l-md flex items-center justify-center"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentQty = getItemQuantityInCart(
+                                      item.id
+                                    );
+                                    if (currentQty === 1) {
+                                      removeFromCart(item.id);
+                                    } else {
+                                      updateCartItemQuantity(
+                                        item.id,
+                                        currentQty - 1
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <AiOutlineMinus size={12} />
+                                </button>
+                                <span className="w-6 h-6 bg-white border-t border-b border-gray-300 flex items-center justify-center text-xs">
+                                  {getItemQuantityInCart(item.id)}
+                                </span>
+                                <button
+                                  className="w-6 h-6 bg-red-800 text-white rounded-r-md flex items-center justify-center"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const currentQty = getItemQuantityInCart(
+                                      item.id
+                                    );
+                                    updateCartItemQuantity(
+                                      item.id,
+                                      currentQty + 1
+                                    );
+                                  }}
+                                >
+                                  <AiOutlinePlus size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                className="mt-1 bg-white border border-red-800 text-red-800 text-xs px-3 py-1 rounded-md hover:bg-red-800 hover:text-white transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToCart(item);
+                                }}
+                              >
+                                Add
+                              </button>
+                            )} */}
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{item.description}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {item.description}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -355,7 +410,9 @@ const Recommendation = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-4 text-gray-500">No items match your filters</div>
+          <div className="text-center py-4 text-gray-500">
+            No items match your filters
+          </div>
         )}
       </div>
     </div>
