@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans&family=Outfit:wght@100..900&family=Poppins&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -5,8 +6,6 @@
   --color-secondary: rgba(219, 69, 76, 0.95);
   --color-light: #ffe2e2;
 }
-
-@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans&family=Outfit:wght@100..900&family=Poppins&display=swap");
 
 .login-text {
   /* Default styles (applies to desktop view) */

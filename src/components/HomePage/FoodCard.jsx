@@ -22,10 +22,13 @@ const IconMap = {
 
 const FoodCard = memo(({ food }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const { cart, addToCart, removeFromCart, updateCartItemQuantity } =
+  const { cart, addToCart, removeFromCart, updateCartItemQuantity, navigate } =
     useAppContext();
-
   const TagIcon = IconMap[food.tagIcon];
+
+  const handleClick = () => {
+    navigate("/variation", { state: { food } });
+  };
 
   // Get item quantity in cart
   const getItemQuantityInCart = (itemId) => {
@@ -36,7 +39,10 @@ const FoodCard = memo(({ food }) => {
   const itemQuantity = getItemQuantityInCart(food.id);
 
   return (
-    <div className="cursor-pointer transition-transform hover:scale-105 w-1/3 px-2 mb-4">
+    <div
+      onClick={handleClick}
+      className="cursor-pointer transition-transform hover:scale-105 w-1/3 px-2 mb-4"
+    >
       <div className="rounded-lg shadow-md overflow-hidden">
         {/* Food Image */}
         <div className="h-32 bg-gray-100 relative">

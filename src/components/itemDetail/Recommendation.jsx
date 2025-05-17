@@ -5,6 +5,7 @@ import { fetchFoodItems } from "../../services/api";
 import { useAppContext } from "../../context/AppContext";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import AddToCartButton from "../AddToCart";
+import axios from "axios";
 
 // Category mapping for display names
 const CATEGORY_NAMES = {
@@ -46,6 +47,22 @@ const Recommendation = ({ food }) => {
     "Delivery Time",
   ];
   const quickFilters = ["Veg Only", "Non-Veg", "Less than ₹200", "Bestseller"];
+
+  useEffect(() => {
+    const runTest = async () => {
+      let total = 0;
+      for (let i = 0; i < 50; i++) {
+        const start = Date.now();
+        await axios.get(
+          "https://hotelbuddhaavenue.vercel.app/api/user/category"
+        );
+        total += Date.now() - start;
+      }
+      console.log("Average Time:", total / 50, "ms");
+    };
+
+    runTest();
+  }, []);
 
   // Fetch data from API and organize by categories
   useEffect(() => {

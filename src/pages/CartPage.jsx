@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import CartItem from "./CartItem";
+import CartItem from "../components/Cart/CartItem";
 import { GrNotes } from "react-icons/gr";
 import { FaPlus, FaTimes } from "react-icons/fa";
-import BillDetail from "./BillDetail";
-import AddressPanel from "./AddressPanel";
-import { useAppContext } from "../../context/AppContext";
+import BillDetail from "../components/Cart/BillDetail";
+import AddressPanel from "../components/Cart/AddressPanel";
+import { useAppContext } from "../context/AppContext";
 
 const CartPage = () => {
   // Sample cart items - in a real app, this would come from context or state management

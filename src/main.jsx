@@ -11,6 +11,8 @@ import CartButton from "./components/CartButton.jsx";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Navbar from "./components/Navbar.jsx";
+import VariationPage from "./pages/VariationPage.jsx";
+import CartPage from "./pages/CartPage.jsx";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -82,9 +84,18 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <>
                 <Navbar />
-                <Cart />
+                <CartPage />
               </>
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/variation"
+          element={
+            <>
+              <Navbar />
+              <VariationPage />
+            </>
           }
         />
       </Routes>

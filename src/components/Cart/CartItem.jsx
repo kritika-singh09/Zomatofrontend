@@ -1,6 +1,6 @@
 import React from "react";
 import { FaPlus, FaMinus, FaTrash } from "react-icons/fa";
-import CartPage from "./CartPage";
+// import CartPage from "./CartPage";
 import { VscDiffModified } from "react-icons/vsc";
 
 const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {

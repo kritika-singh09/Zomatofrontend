@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BsArrowLeftCircle } from "react-icons/bs";
 import { IoPeople } from "react-icons/io5";
@@ -13,15 +12,22 @@ import { assets } from "../assets/assets";
 import { BsCartPlus, BsCart3 } from "react-icons/bs";
 
 const ItemDetail = () => {
-  const { navigate, foodItem, setFoodItem,addToCart, showCartNotification, cart } = useAppContext();
+  const {
+    navigate,
+    foodItem,
+    setFoodItem,
+    addToCart,
+    showCartNotification,
+    cart,
+  } = useAppContext();
   const [activeDiv, setActiveDiv] = useState(0);
   const [showLocalNotification, setShowLocalNotification] = useState(false);
   const [isItemInCart, setIsItemInCart] = useState(false);
 
   // Check if the current item is in the cart
   useEffect(() => {
-    const itemInCart = cart.some(item => 
-      item.name === foodItem.name && item.price === foodItem.price
+    const itemInCart = cart.some(
+      (item) => item.name === foodItem.name && item.price === foodItem.price
     );
     setIsItemInCart(itemInCart);
   }, [cart, foodItem]);
@@ -46,23 +52,21 @@ const ItemDetail = () => {
     return () => clearInterval(interval);
   }, []);
 
-   // Handle add to cart
+  // Handle add to cart
   const handleAddToCart = () => {
     addToCart(foodItem);
     setShowLocalNotification(true);
 
-    
     // Hide local notification after 3 seconds
     setTimeout(() => {
       setShowLocalNotification(false);
     }, 3000);
   };
 
-    const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
-
+  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
 
   return (
-     <div className="p-3 pb-24">
+    <div className="p-3 pb-24">
       {/* Cart notification popup */}
       {showLocalNotification && (
         <div className="fixed bottom-20 left-0 right-0 mx-auto w-4/5 bg-red-400 text-white py-2 px-4 rounded-lg shadow-lg z-50 flex items-center justify-between">
@@ -70,8 +74,8 @@ const ItemDetail = () => {
             <p className="font-medium">Item added to cart!</p>
             <p className="text-xs">Your item is waiting in the cart</p>
           </div>
-          <button 
-            onClick={() => navigate('/cart')} 
+          <button
+            onClick={() => navigate("/cart")}
             className="bg-white text-red-500 px-3 py-1 rounded-md text-sm font-medium"
           >
             View Cart
@@ -89,32 +93,35 @@ const ItemDetail = () => {
         </div>
       </div>
       <div className="flex justify-between items-center my-1 px-1">
-         <div className="bg-green-600 text-white rounded-2xl float-right flex items-center px-1 text-xs h-5">
+        <div className="bg-green-600 text-white rounded-2xl float-right flex items-center px-1 text-xs h-5">
           <span>{foodItem.rating}</span>
           <span>
             <FaStar />
           </span>
         </div>
-         {foodItem.veg ? (
-        <div className="bg-green-200 inline-block text-[10px] rounded-xl p-1 opacity-60">
-          <BiSolidLeaf className="inline" />
-          <span>Pure Veg</span>
-        </div>
-      ) : (
-        ""
-      )}     
-     </div>
+        {foodItem.veg ? (
+          <div className="bg-green-200 inline-block text-[10px] rounded-xl p-1 opacity-60">
+            <BiSolidLeaf className="inline" />
+            <span>Pure Veg</span>
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
       <div className="flex justify-between">
         <div>
-          <div >
-            <img className="rounded-xl w-full mb-2" src={assets.biryani_image} alt="" />
+          <div>
+            <img
+              className="rounded-xl w-full mb-2"
+              src={assets.biryani_image}
+              alt=""
+            />
           </div>
           <h1 className="font-semibold text-lg">{foodItem.name}</h1>
           <p className="text-xs text-gray-500">{foodItem.category}</p>
           <p className="text-xs text-gray-500">{foodItem.description}</p>
           <p className="text-xs text-gray-500">Delivery Time:35-40mins</p>
         </div>
-       
       </div>
       <div className="text-xs text-gray-500 flex justify-around my-4">
         <span className="bg-gray-200 rounded-2xl px-2 py-0.5">
@@ -152,15 +159,15 @@ const ItemDetail = () => {
       {/* Bottom Button - Changes based on cart state */}
       <div className="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-lg border-t">
         {isItemInCart ? (
-          <button 
-            onClick={() => navigate('/cart')}
+          <button
+            onClick={() => navigate("/cart")}
             className="w-full bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
           >
             <BsCart3 size={20} />
             View Cart {totalItems > 0 && `(${totalItems})`}
           </button>
         ) : (
-          <button 
+          <button
             onClick={handleAddToCart}
             className="w-full bg-red-400 transition-all ease-in-out duration-300 hover:bg-red-800 text-white py-3 rounded-lg flex items-center justify-center gap-2 font-medium"
           >
