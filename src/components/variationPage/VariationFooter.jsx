@@ -4,9 +4,7 @@ import { useLocation } from "react-router-dom";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 
-const VariationFooter = () => {
-  const location = useLocation();
-  const food = location.state?.food;
+const VariationFooter = ({ food }) => {
   const { addToCart, cart, navigate } = useAppContext();
 
   // Get current quantity from cart

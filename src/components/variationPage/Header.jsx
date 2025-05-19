@@ -1,23 +1,22 @@
+import { useEffect } from "react";
 import React from "react";
 import { VscDiffModified } from "react-icons/vsc";
 import { CiBookmark } from "react-icons/ci";
 import { PiShareFatBold } from "react-icons/pi";
 import Banner from "./Banner";
-import { useLocation } from "react-router-dom";
 
-const Header = () => {
-  const location = useLocation();
-  const food = location.state?.food;
-
+const Header = ({ food }) => {
   if (!food) return null;
 
   return (
     <div className=" bg-white rounded-xl p-2 m-3">
-      <Banner />
+      <Banner food={food} />
       <div className="px-1 my-2">
         <div className="flex items-center">
           <div style={{ margin: "0.5rem 0.5rem 0.5rem 0" }}>
-            <VscDiffModified className="text-green-600  " />
+            <VscDiffModified
+              className={food.veg ? "text-green-600 " : "text-red-600"}
+            />
           </div>
           <div>
             <span>{food.tag || "Spicy"}</span>

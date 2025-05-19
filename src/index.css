@@ -40,3 +40,46 @@
     object-fit: cover;
   }
 }
+/* modal animation  */
+.bottomsheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.2); /* Not fully black */
+  backdrop-filter: brightness(0.7);
+  transition: opacity 0.3s;
+}
+
+.bottomsheet-sheet {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 100%);
+  width: 100%;
+  max-width: 600px;
+  background: #e5e7eb;
+  border-top-left-radius: 1.5rem;
+  border-top-right-radius: 1.5rem;
+  z-index: 50;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  height: 80vh; /* Ensure this matches your modal height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.bottomsheet-sheet.open {
+  transform: translate(-50%, 0%);
+}
+
+.close-btn-animate {
+  opacity: 0;
+  transform: scale(0.8);
+  animation: fadeInScale 0.3s 0s forwards;
+}
+@keyframes fadeInScale {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

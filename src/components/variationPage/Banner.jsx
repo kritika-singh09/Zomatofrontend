@@ -4,10 +4,7 @@ import { useParams } from "react-router-dom";
 import { assets } from "../../assets/assets";
 import { useLocation } from "react-router-dom";
 
-const Banner = () => {
-  const location = useLocation();
-  const food = location.state?.food;
-
+const Banner = ({ food }) => {
   if (!food) return null;
 
   return (

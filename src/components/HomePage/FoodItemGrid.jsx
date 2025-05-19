@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import FoodCard from "./FoodCard";
 import { fetchFoodItems } from "../../services/api";
 
-const FoodItemGrid = () => {
+const FoodItemGrid = ({ onFoodClick }) => {
   const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +50,7 @@ const FoodItemGrid = () => {
       {!loading && !error && (
         <div className="flex flex-wrap -mx-2">
           {topRatedFoodItems.map((food) => (
-            <FoodCard key={food.id} food={food} />
+            <FoodCard key={food.id} food={food} onFoodClick={onFoodClick} />
           ))}
         </div>
       )}

@@ -7,15 +7,17 @@ import AddOns from "../components/variationPage/AddOns";
 import Message from "../components/variationPage/Message";
 import VariationFooter from "../components/variationPage/VariationFooter";
 
-const VariationPage = () => {
+const VariationPage = ({ food }) => {
+  if (!food) return null;
+
   return (
-    <div className="bg-gray-200 h-full">
+    <div className="bg-gray-200 w-full">
       {/* <Banner /> */}
-      <Header />
-      <VariationOptions />
-      <AddOns />
-      <Message />
-      <VariationFooter />
+      <Header food={food} />
+      <VariationOptions food={food} />
+      <AddOns food={food} />
+      <Message food={food} />
+      <VariationFooter food={food} />
     </div>
   );
 };

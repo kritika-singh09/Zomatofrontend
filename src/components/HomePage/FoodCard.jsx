@@ -20,15 +20,15 @@ const IconMap = {
   GiCupcake: GiCupcake,
 };
 
-const FoodCard = memo(({ food }) => {
+const FoodCard = memo(({ food, onFoodClick }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { cart, addToCart, removeFromCart, updateCartItemQuantity, navigate } =
     useAppContext();
   const TagIcon = IconMap[food.tagIcon];
 
-  const handleClick = () => {
-    navigate("/variation", { state: { food } });
-  };
+  // const handleClick = () => {
+  //   navigate("/variation", { state: { food } });
+  // };
 
   // Get item quantity in cart
   const getItemQuantityInCart = (itemId) => {
@@ -40,7 +40,7 @@ const FoodCard = memo(({ food }) => {
 
   return (
     <div
-      onClick={handleClick}
+      onClick={() => onFoodClick && onFoodClick(food)}
       className="cursor-pointer transition-transform hover:scale-105 w-1/3 px-2 mb-4"
     >
       <div className="rounded-lg shadow-md overflow-hidden">
