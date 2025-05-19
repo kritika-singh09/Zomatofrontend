@@ -5,10 +5,12 @@ import { FaPlus, FaTimes } from "react-icons/fa";
 import BillDetail from "../components/Cart/BillDetail";
 import AddressPanel from "../components/Cart/AddressPanel";
 import { useAppContext } from "../context/AppContext";
+import { FaTrash } from "react-icons/fa";
 
 const CartPage = () => {
   // Sample cart items - in a real app, this would come from context or state management
-  const { cart, updateCartItemQuantity, removeFromCart } = useAppContext();
+  const { cart, updateCartItemQuantity, removeFromCart, clearCart } =
+    useAppContext();
 
   const formattedCart = cart.map((item) => ({
     ...item,
@@ -66,6 +68,17 @@ const CartPage = () => {
 
   return (
     <div className="p-4 pb-32">
+      {cart.length > 0 && (
+        <div className="flex justify-end mb-0">
+          <button
+            onClick={clearCart}
+            className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-md hover:bg-red-100"
+          >
+            <FaTrash className="mr-2" size={14} />
+            Clear Cart
+          </button>
+        </div>
+      )}
       {cart.length === 0 ? (
         <div className="bg-white p-8 text-center">
           <p className="text-gray-500 mb-4">Your cart is empty</p>

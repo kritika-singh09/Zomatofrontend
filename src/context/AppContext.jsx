@@ -158,7 +158,7 @@ export const AppContextProvider = ({ children }) => {
     if (existingItemIndex !== -1) {
       // If item exists, update quantity
       const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity += 1;
+      updatedCart[existingItemIndex].quantity = quantity;
       setCart(updatedCart);
     } else {
       // If item doesn't exist, add it with quantity 1
@@ -173,9 +173,46 @@ export const AppContextProvider = ({ children }) => {
       setShowCartNotification(false);
     }, 3000);
   };
+
+  const addToCartWithQuantity = (item, quantity) => {
+    if (!item || !item.id) {
+      console.error("Invalid item or missing ID:", item);
+      return;
+    }
+
+    // Check if item already exists in cart
+    const existingItemIndex = cart.findIndex(
+      (cartItem) => cartItem.id === item.id
+    );
+
+    if (existingItemIndex !== -1) {
+      // If item exists, set to the specified quantity
+      const updatedCart = [...cart];
+      updatedCart[existingItemIndex].quantity = quantity;
+      setCart(updatedCart);
+    } else {
+      // If item doesn't exist, add it with the specified quantity
+      setCart([...cart, { ...item, quantity, id: item.id }]);
+    }
+
+    // Show notification
+    setShowCartNotification(true);
+
+    // Hide notification after 3 seconds
+    setTimeout(() => {
+      setShowCartNotification(false);
+    }, 3000);
+  };
+
   // Remove item from cart
   const removeFromCart = (itemId) => {
     setCart(cart.filter((item) => item.id !== itemId));
+  };
+
+  // Empty Cart
+  const clearCart = () => {
+    alert("Delete all the items of the cart?");
+    setCart([]);
   };
 
   // Update item quantity in cart
@@ -210,6 +247,8 @@ export const AppContextProvider = ({ children }) => {
     logout,
     user,
     loading,
+    clearCart,
+    addToCartWithQuantity,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

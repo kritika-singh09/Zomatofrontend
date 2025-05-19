@@ -7,7 +7,7 @@ import AddOns from "../components/variationPage/AddOns";
 import Message from "../components/variationPage/Message";
 import VariationFooter from "../components/variationPage/VariationFooter";
 
-const VariationPage = ({ food }) => {
+const VariationPage = ({ food, onClose }) => {
   if (!food) return null;
 
   return (
@@ -17,7 +17,7 @@ const VariationPage = ({ food }) => {
       <VariationOptions food={food} />
       <AddOns food={food} />
       <Message food={food} />
-      <VariationFooter food={food} />
+      <VariationFooter food={food} onClose={onClose} />
     </div>
   );
 };

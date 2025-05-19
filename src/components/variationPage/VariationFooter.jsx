@@ -4,37 +4,19 @@ import { useLocation } from "react-router-dom";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 
-const VariationFooter = ({ food }) => {
-  const { addToCart, cart, navigate } = useAppContext();
+const VariationFooter = ({ food, onClose }) => {
+  const { cart, addToCartWithQuantity } = useAppContext();
+  const [quantity, setQuantity] = useState(1);
 
   // Get current quantity from cart
-  const getItemQuantityInCart = () => {
-    if (!food) return 0;
-    const cartItem = cart.find((item) => item.id === food.id);
-    return cartItem ? cartItem.quantity : 0;
-  };
-
-  // Initialize quantity with current cart value or 1
-  const [quantity, setQuantity] = useState(() => {
-    const cartQuantity = getItemQuantityInCart();
-    return cartQuantity > 0 ? cartQuantity : 1;
-  });
-
-  // Update quantity if cart changes
   useEffect(() => {
-    const cartQuantity = getItemQuantityInCart();
-    if (cartQuantity > 0) {
-      setQuantity(cartQuantity);
+    if (food) {
+      const cartItem = cart.find((item) => item.id === food.id);
+      if (cartItem) {
+        setQuantity(cartItem.quantity);
+      }
     }
-  }, [cart, food]);
-
-  if (!food) return null;
-
-  const price =
-    typeof food.price === "number"
-      ? food.price
-      : parseFloat(food.price?.replace(/[^\d.]/g, "")) || 0;
-  const totalPrice = price * quantity;
+  }, [food, cart]);
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);
@@ -47,20 +29,26 @@ const VariationFooter = ({ food }) => {
   };
 
   const handleAddToCart = () => {
-    // Clear existing items for this food
-    const existingQuantity = getItemQuantityInCart();
+    if (!food) return;
 
-    // Add the item with the new quantity
-    if (quantity > existingQuantity) {
-      // Add additional items
-      for (let i = 0; i < quantity - existingQuantity; i++) {
-        addToCart(food);
-      }
-    } else if (quantity < existingQuantity) {
+    // Use the addToCartWithQuantity function to handle all cases
+    addToCartWithQuantity(food, quantity);
+
+    // Close the modal
+    if (typeof onClose === "function") {
+      onClose();
+    } else {
+      console.error("onClose is not a function:", onClose);
     }
-
-    navigate("/");
   };
+
+  if (!food) return null;
+
+  const price =
+    typeof food.price === "number"
+      ? food.price
+      : parseFloat(food.price?.replace(/[^\d.]/g, "")) || 0;
+  const totalPrice = price * quantity;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 p-4 flex justify-between">

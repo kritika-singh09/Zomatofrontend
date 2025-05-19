@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
 import { AiOutlinePlus, AiOutlineMinus, AiOutlineDelete } from "react-icons/ai";
 
-const AddToCartButton = ({ item }) => {
+const AddToCartButton = ({ item, onFoodClick }) => {
   const { cart, addToCart, removeFromCart, updateCartItemQuantity } =
     useAppContext();
 
@@ -67,7 +67,11 @@ const AddToCartButton = ({ item }) => {
       className="px-4 py-1 w-20 bg-light text-primary cursor-pointer border border-red-800 rounded-md transition-all ease-in-out duration-300"
       onClick={(e) => {
         e.stopPropagation();
-        addToCart(item);
+        if (onFoodClick) {
+          onFoodClick(item);
+        } else {
+          addToCart(item);
+        }
       }}
     >
       Add

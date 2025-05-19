@@ -73,14 +73,6 @@ const FoodCard = memo(({ food, onFoodClick }) => {
               setImageLoaded(true);
             }}
           />
-
-          {/* Tag */}
-          {/* <div
-            className={`absolute top-2 left-2 ${food.tagBg} px-2 py-1 rounded-full flex items-center`}
-          >
-            {TagIcon && <TagIcon className={food.tagIconColor} />}
-            <span className="ml-1 text-xs font-medium">{food.tag}</span>
-          </div> */}
         </div>
 
         {/* Food Details */}
@@ -101,7 +93,7 @@ const FoodCard = memo(({ food, onFoodClick }) => {
             <span className="mx-1 text-gray-300 text-xs">•</span>
           </div>
           <div className="item-actions">
-            <AddToCartButton item={food} />
+            <AddToCartButton item={food} onFoodClick={onFoodClick} />
           </div>
         </div>
       </div>

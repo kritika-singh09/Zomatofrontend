@@ -45,9 +45,10 @@
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: rgba(0, 0, 0, 0.2); /* Not fully black */
-  backdrop-filter: brightness(0.7);
-  transition: opacity 0.3s;
+  background: rgba(0, 0, 0, 0); /* Not fully black */
+  backdrop-filter: brightness(1);
+  transition: all 0.3s ease;
+  animation: fadeInOverlay 0.3s forwards;
 }
 
 .bottomsheet-sheet {
@@ -67,6 +68,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  scrollbar-width: none;
+}
+
+.bottomsheet-sheet::-webkit-scrollbar {
+  display: none;
 }
 .bottomsheet-sheet.open {
   transform: translate(-50%, 0%);
@@ -77,9 +83,21 @@
   transform: scale(0.8);
   animation: fadeInScale 0.3s 0s forwards;
 }
+
 @keyframes fadeInScale {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes fadeInOverlay {
+  from {
+    background: rgba(0, 0, 0, 0);
+    backdrop-filter: brightness(1);
+  }
+  to {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: brightness(0.7);
   }
 }

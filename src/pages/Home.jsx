@@ -16,6 +16,10 @@ const Home = () => {
     setOpen(true);
   };
 
+  const handleClose = () => {
+    setOpen(false);
+  };
+
   return (
     <div className="max-w-xl mx-auto">
       <Header />
@@ -24,7 +28,7 @@ const Home = () => {
       <Recommendation />
       <CartButton />
       <BottomSheetModal open={open} onClose={() => setOpen(false)}>
-        <VariationPage food={selectedFood} />
+        <VariationPage food={selectedFood} onClose={handleClose} />
       </BottomSheetModal>
     </div>
   );
