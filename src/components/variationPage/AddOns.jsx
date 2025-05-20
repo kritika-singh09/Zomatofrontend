@@ -37,8 +37,8 @@ const AddOns = ({ food, onAddonsChange }) => {
             key={addon.id}
             className={`flex items-center p-2 rounded cursor-pointer border ${
               selectedAddons.some((a) => a.id === addon.id)
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200"
+                ? "border-none bg-blue-50"
+                : "border-none"
             }`}
           >
             <input

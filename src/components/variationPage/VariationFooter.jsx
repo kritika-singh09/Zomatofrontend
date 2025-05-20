@@ -1,15 +1,17 @@
 // src/components/variationPage/VariationFooter.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 
 const VariationFooter = ({ food, onClose }) => {
   const { cart, addToCartWithQuantity, removeFromCart } = useAppContext();
   const [quantity, setQuantity] = useState(1);
+  const initialRender = useRef(true);
+  const baseItemId = useRef(food?.id?.split("-")[0] || food?.id);
 
   // Get current quantity from cart
   useEffect(() => {
-    if (food && food.id) {
+    if (food && baseItemId.current) {
       // Check for exact match first
       const exactMatch = cart.find((item) => item.id === food.id);
       if (exactMatch) {
@@ -17,30 +19,28 @@ const VariationFooter = ({ food, onClose }) => {
         return;
       }
 
-      // If no exact match but this is a variation, check the base item
-      if (food.id.includes("-")) {
-        const baseId = food.id.split("-")[0];
-        const baseItem = cart.find((item) => item.id === baseId);
-        if (baseItem) {
-          setQuantity(baseItem.quantity);
-          return;
-        }
+      // Check for the base item (without variations/addons)
+      const baseItem = cart.find((item) => item.id === baseItemId.current);
+      if (baseItem) {
+        setQuantity(baseItem.quantity);
+        return;
       }
 
-      // If this is a base item, check for variations
+      // Check for any variations of the base item
       const variations = cart.filter((item) =>
-        item.id.startsWith(`${food.id}-`)
+        item.id.startsWith(`${baseItemId.current}-`)
       );
 
       if (variations.length > 0) {
         // If variations exist, set quantity to the first variation's quantity
         setQuantity(variations[0].quantity);
-      } else {
-        // No item in cart, start with 1
+      } else if (initialRender.current) {
+        // Only set to 1 on initial render if no items found
         setQuantity(1);
+        initialRender.current = false;
       }
     }
-  }, [food, cart]);
+  }, [cart]);
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);
