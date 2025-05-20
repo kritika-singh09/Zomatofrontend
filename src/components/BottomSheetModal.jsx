@@ -50,7 +50,7 @@ const BottomSheetModal = ({ open, onClose, children, height = "80vh" }) => {
       {/* Close button just above the modal */}
       {showCloseButton && (
         <button
-          className="fixed left-1/2 z-50 -translate-x-1/2 bottom-[80vh] mb-2 bg-white rounded-full shadow-lg border border-gray-200 w-10 h-10 flex justify-center text-2xl text-gray-500 close-btn-animate"
+          className="fixed left-1/2 z-50 items-center -translate-x-1/2 bottom-[80vh] mb-2 bg-white rounded-full shadow-lg border border-gray-200 w-10 h-10 flex justify-center text-2xl text-gray-500 close-btn-animate"
           onClick={onClose}
         >
           &times;

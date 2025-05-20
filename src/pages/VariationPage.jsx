@@ -13,7 +13,7 @@ const VariationPage = ({
   onClose: propOnClose,
   onVariationChange,
 }) => {
-  const { foodItem, addToCartWithQuantity } = useAppContext();
+  const { cart, foodItem, addToCartWithQuantity } = useAppContext();
   const navigate = useNavigate();
 
   const food = propFood || foodItem;
@@ -35,17 +35,36 @@ const VariationPage = ({
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [quantity, setQuantity] = useState(1);
 
-  useEffect(() => {
-    console.log("VariationPage rendered with food:", food);
-    console.log("Food has variation:", !!food?.variation);
-    console.log("Food has addon:", !!food?.addon);
-    console.log("Selected variation:", selectedVariation);
-  }, [stableFood, selectedVariation]);
+  // useEffect(() => {
+  //   console.log("VariationPage rendered with food:", food);
+  //   console.log("Food has variation:", !!food?.variation);
+  //   console.log("Food has addon:", !!food?.addon);
+  //   console.log("Selected variation:", selectedVariation);
+  // }, [stableFood, selectedVariation]);
 
   useEffect(() => {
     setSelectedVariation(stableFood?.variation?.[0] || null);
     setSelectedAddons([]);
   }, [stableFood]);
+
+  // Handle sync change
+  useEffect(() => {
+    if (!stableFood) return;
+    // Generate the unique id for the current selection
+    const variationId = selectedVariation?.id || "default";
+    const addonIds = selectedAddons
+      .map((addon) => addon.id)
+      .sort()
+      .join("-");
+    const uniqueId = `${stableFood.id}-${variationId}-${addonIds}`;
+    // Find the item in the cart
+    const cartItem = cart.find((item) => item.id === uniqueId);
+    if (cartItem) {
+      setQuantity(cartItem.quantity);
+    } else {
+      setQuantity(1);
+    }
+  }, [stableFood, selectedVariation, selectedAddons, cart]);
 
   // Calculate total price based on selections
   const getBasePrice = () => {
@@ -85,10 +104,16 @@ const VariationPage = ({
       selectedAddons.length > 0
         ? `+ ${selectedAddons.map((addon) => addon.name).join(", ")}`
         : "";
+
+    // Calculate the item price: base price + addons (not multiplied)
+    const itemPrice = getBasePrice() + getAddonPrice();
+
     return {
       ...food,
       id: getUniqueItemId(), // <-- unique id for cart
-      price: getTotalPrice().toString(),
+      price: itemPrice.toString(),
+      basePrice: getBasePrice(),
+      addonPrice: getAddonPrice(),
       selectedVariation,
       selectedAddons,
       originalPrice: food?.price,
@@ -122,7 +147,8 @@ const VariationPage = ({
       <VariationFooter
         food={getFoodWithSelections()}
         onClose={onClose}
-        totalPrice={getTotalPrice()}
+        basePrice={getBasePrice()}
+        addonPrice={getAddonPrice()}
         onAddToCart={handleAddToCart}
         quantity={quantity}
         onQuantityChange={setQuantity}

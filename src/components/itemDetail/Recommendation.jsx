@@ -305,7 +305,7 @@ const Recommendation = ({ food, onFoodClick }) => {
           filteredCategories.map((category) => (
             <div
               key={category.name}
-              className="border border-gray-200 rounded-md overflow-hidden"
+              className="border-b-gray-200 rounded-md overflow-hidden"
             >
               {/* Accordion header */}
               <button

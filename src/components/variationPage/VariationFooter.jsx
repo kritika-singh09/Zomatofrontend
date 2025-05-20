@@ -3,52 +3,50 @@ import React, { useState, useEffect, useRef } from "react";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 
-const VariationFooter = ({ food, onClose }) => {
+const VariationFooter = ({
+  food,
+  onClose,
+  basePrice,
+  addonPrice,
+  onAddToCart,
+  quantity,
+  onQuantityChange,
+}) => {
   const { cart, addToCartWithQuantity, removeFromCart } = useAppContext();
-  const [quantity, setQuantity] = useState(1);
-  const initialRender = useRef(true);
-  const baseItemId = useRef(food?.id?.split("-")[0] || food?.id);
+  // const [quantity, setQuantity] = useState(1);
+  // // const initialRender = useRef(true);
+  // const baseItemId = useRef(food?.id?.split("-")[0] || food?.id);
 
-  // Get current quantity from cart
-  useEffect(() => {
-    if (food && baseItemId.current) {
-      // Check for exact match first
-      const exactMatch = cart.find((item) => item.id === food.id);
-      if (exactMatch) {
-        setQuantity(exactMatch.quantity);
-        return;
-      }
+  // // Get current quantity from cart
+  // useEffect(() => {
+  //   if (food && food.id) {
+  //     // Check for exact match of this specific variation
+  //     const exactMatch = cart.find((item) => item.id === food.id);
+  //     if (exactMatch) {
+  //       setQuantity(exactMatch.quantity);
+  //     } else {
+  //       // Check if there's a match with the base item ID (without variations)
+  //       const baseId = food.id.split("-")[0] || food.id;
+  //       const baseMatch = cart.find(
+  //         (item) => (item.id.split("-")[0] || item.id) === baseId
+  //       );
 
-      // Check for the base item (without variations/addons)
-      const baseItem = cart.find((item) => item.id === baseItemId.current);
-      if (baseItem) {
-        setQuantity(baseItem.quantity);
-        return;
-      }
-
-      // Check for any variations of the base item
-      const variations = cart.filter((item) =>
-        item.id.startsWith(`${baseItemId.current}-`)
-      );
-
-      if (variations.length > 0) {
-        // If variations exist, set quantity to the first variation's quantity
-        setQuantity(variations[0].quantity);
-      } else if (initialRender.current) {
-        // Only set to 1 on initial render if no items found
-        setQuantity(1);
-        initialRender.current = false;
-      }
-    }
-  }, [cart]);
+  //       if (baseMatch) {
+  //         // Keep the quantity from the base item
+  //         setQuantity(baseMatch.quantity);
+  //       }
+  //       // Only set to 1 if it's a completely new item
+  //     }
+  //   }
+  // }, [food?.id, cart]);
 
   const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
+    onQuantityChange(quantity + 1);
   };
 
   const handleDecrement = () => {
     if (quantity > 1) {
-      setQuantity((prev) => prev - 1);
+      onQuantityChange(quantity - 1);
     } else if (quantity === 1) {
       // Remove item from cart when quantity is 1
       if (food && food.id) {
@@ -62,25 +60,22 @@ const VariationFooter = ({ food, onClose }) => {
 
   const handleAddToCart = () => {
     if (!food) return;
-
-    // Add to cart with the selected quantity
     addToCartWithQuantity(food, quantity);
-
-    // Close the modal
+    if (typeof onAddToCart === "function") {
+      onAddToCart(quantity);
+    }
     if (typeof onClose === "function") {
       onClose();
-    } else {
-      console.error("onClose is not a function:", onClose);
     }
   };
 
   if (!food) return null;
 
-  const price =
-    typeof food.price === "number"
-      ? food.price
-      : parseFloat(food.price?.replace(/[^\d.]/g, "")) || 0;
-  const totalPrice = price * quantity;
+  // Calculate total price: (base price × quantity) + addon price
+  const itemBasePrice =
+    basePrice || parseFloat(food.basePrice || food.price || 0);
+  const itemAddonPrice = addonPrice || parseFloat(food.addonPrice || 0);
+  const totalPrice = itemBasePrice * quantity + itemAddonPrice;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 p-4 flex justify-between">
