@@ -48,10 +48,21 @@ const AddToCartButton = ({ item, onFoodClick }) => {
     return {
       quantity: totalQuantity,
       cartItemId: cartItemId,
+      hasCustomizations: variations.length > 0,
     };
   };
 
-  const { quantity, cartItemId } = getItemDetails();
+  const { quantity, cartItemId, hasCustomizations } = getItemDetails();
+
+  const handleAddClick = (e) => {
+    e.stopPropagation();
+    onFoodClick(item);
+  };
+
+  const handleQuantityChange = (e) => {
+    e.stopPropagation();
+    onFoodClick(item);
+  };
 
   if (quantity > 0) {
     return (
@@ -78,10 +89,7 @@ const AddToCartButton = ({ item, onFoodClick }) => {
         </span>
         <button
           className="w-8 h-8 bg-light text-primary flex items-center justify-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            onFoodClick(item);
-          }}
+          onClick={handleQuantityChange}
         >
           <AiOutlinePlus size={16} />
         </button>
@@ -92,10 +100,7 @@ const AddToCartButton = ({ item, onFoodClick }) => {
   return (
     <button
       className="px-4 py-1 w-20 bg-light text-primary cursor-pointer border border-red-800 rounded-md transition-all ease-in-out duration-300"
-      onClick={(e) => {
-        e.stopPropagation();
-        onFoodClick(item);
-      }}
+      onClick={handleAddClick}
     >
       Add
     </button>

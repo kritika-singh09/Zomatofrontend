@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Banner from "../components/variationPage/Banner";
 import { useAppContext } from "../context/AppContext";
 import Header from "../components/variationPage/Header";
@@ -13,10 +13,37 @@ const VariationPage = ({
   onClose: propOnClose,
   onVariationChange,
 }) => {
-  const { cart, foodItem, addToCartWithQuantity } = useAppContext();
+  const {
+    cart,
+    foodItem,
+    addToCartWithQuantity,
+    addToCartWithAddons,
+    getBaseVariationId,
+  } = useAppContext();
   const navigate = useNavigate();
 
   const food = propFood || foodItem;
+  const [selectedVariation, setSelectedVariation] = useState(
+    food?.variation?.[0] || null
+  );
+  const [selectedAddons, setSelectedAddons] = useState([]);
+  const [quantity, setQuantity] = useState(1); // Add quantity state
+
+  // Track if this is the first render or addon selection
+  const isFirstRender = useRef(true);
+  const previousAddons = useRef([]);
+
+  // Store the initial quantity of this specific item with addons
+  const initialQuantityRef = useRef(0);
+  const currentItemIdRef = useRef("");
+
+  // Get the base+variation ID
+  const baseVariationId = getBaseVariationId(food, selectedVariation);
+
+  // Get quantity for this base+variation from cart
+  const cartQuantity =
+    cart.find((item) => item.id === baseVariationId)?.quantity || 0;
+
   const onClose = propOnClose || (() => navigate(-1));
 
   // Use API data directly
@@ -29,41 +56,35 @@ const VariationPage = ({
     };
   }, [food]);
 
-  const [selectedVariation, setSelectedVariation] = useState(
-    stableFood?.variation?.[0] || null
-  );
-  const [selectedAddons, setSelectedAddons] = useState([]);
-  const [quantity, setQuantity] = useState(1);
-
-  // useEffect(() => {
-  //   console.log("VariationPage rendered with food:", food);
-  //   console.log("Food has variation:", !!food?.variation);
-  //   console.log("Food has addon:", !!food?.addon);
-  //   console.log("Selected variation:", selectedVariation);
-  // }, [stableFood, selectedVariation]);
-
   useEffect(() => {
     setSelectedVariation(stableFood?.variation?.[0] || null);
     setSelectedAddons([]);
+    isFirstRender.current = true;
+    setQuantity(1); // Reset quantity to 1 when food changes
   }, [stableFood]);
 
-  // Handle sync change
+  // Get the unique ID for the current item with addons
+  // Get the unique ID for the current item with addons
+  // Get the unique ID for the current item with addons
   useEffect(() => {
     if (!stableFood) return;
-    // Generate the unique id for the current selection
+
     const variationId = selectedVariation?.id || "default";
     const addonIds = selectedAddons
       .map((addon) => addon.id)
       .sort()
       .join("-");
-    const uniqueId = `${stableFood.id}-${variationId}-${addonIds}`;
-    // Find the item in the cart
-    const cartItem = cart.find((item) => item.id === uniqueId);
-    if (cartItem) {
-      setQuantity(cartItem.quantity);
-    } else {
-      setQuantity(1);
-    }
+
+    const itemId = `${stableFood.id}-${variationId}${
+      addonIds ? `-${addonIds}` : ""
+    }`;
+    currentItemIdRef.current = itemId;
+
+    // Find this specific item in cart
+    const exactMatch = cart.find((item) => item.id === itemId);
+    initialQuantityRef.current = exactMatch ? exactMatch.quantity : 0;
+
+    isFirstRender.current = false;
   }, [stableFood, selectedVariation, selectedAddons, cart]);
 
   // Calculate total price based on selections
@@ -81,10 +102,6 @@ const VariationPage = ({
     );
   };
 
-  const getTotalPrice = () => {
-    return getBasePrice() + getAddonPrice();
-  };
-
   // Create a unique ID for this specific combination of food, variation, and add-ons
   const getUniqueItemId = () => {
     const variationId = selectedVariation?.id || "default";
@@ -92,7 +109,7 @@ const VariationPage = ({
       .map((addon) => addon.id)
       .sort()
       .join("-");
-    return `${stableFood.id}-${variationId}-${addonIds}`;
+    return `${stableFood.id}-${variationId}${addonIds ? `-${addonIds}` : ""}`;
   };
 
   // Create a modified food object with the selected options
@@ -123,8 +140,14 @@ const VariationPage = ({
   };
 
   const handleAddToCart = () => {
-    const itemWithSelections = getFoodWithSelections();
-    addToCartWithQuantity(itemWithSelections, quantity);
+    const foodWithSelections = getFoodWithSelections();
+
+    // Get the current quantity in cart for this specific item
+    const currentQuantityInCart = initialQuantityRef.current;
+
+    // Add the counter value to the existing quantity in cart
+    addToCartWithQuantity(foodWithSelections, currentQuantityInCart + quantity);
+
     if (onClose) onClose();
   };
 
@@ -135,6 +158,13 @@ const VariationPage = ({
     );
   }
 
+  const instances = Array.isArray(cart)
+    ? cart.filter((item) =>
+        item.id.startsWith(
+          `${stableFood.id}-${selectedVariation?.id || "default"}`
+        )
+      )
+    : [];
   return (
     <div className="bg-gray-200 w-full">
       <Header food={stableFood} />
@@ -144,6 +174,39 @@ const VariationPage = ({
       />
       <AddOns food={stableFood} onAddonsChange={setSelectedAddons} />
       <Message />
+
+      {/* Show all instances (with their addons) for this base+variation */}
+      {cart.filter((item) => item.id.startsWith(`${stableFood.id}-`)).length >
+        0 && (
+        <div className="bg-white rounded-xl px-2.5 py-3.5 mx-3 my-4">
+          <h3 className="text-base font-medium mb-2">Current Items in Cart</h3>
+          {cart
+            .filter((item) => item.id.startsWith(`${stableFood.id}-`))
+            .map((item, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between text-sm text-gray-700 mb-2 p-2 border-b"
+              >
+                <div>
+                  <div className="font-medium">
+                    {item.variationDetails || "Regular"}
+                  </div>
+                  {item.addonDetails && (
+                    <div className="text-xs text-gray-500">
+                      {item.addonDetails}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center">
+                  <span className="bg-gray-100 px-2 py-1 rounded-md">
+                    Qty: {item.quantity}
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+      )}
+
       <VariationFooter
         food={getFoodWithSelections()}
         onClose={onClose}

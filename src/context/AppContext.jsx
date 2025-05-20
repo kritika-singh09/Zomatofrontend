@@ -30,7 +30,7 @@ export const AppContextProvider = ({ children }) => {
   // Initialize cart from localStorage if available
   const [cart, setCart] = useState(() => {
     const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : [];
+    return savedCart ? JSON.parse(savedCart) : {};
   });
   const [showCartNotification, setShowCartNotification] = useState(false);
 
@@ -68,6 +68,15 @@ export const AppContextProvider = ({ children }) => {
     const cartJSON = JSON.stringify(cart);
     localStorage.setItem("cart", cartJSON);
   }, [cart]); // Only run when cart changes
+
+  // Generate unique ID for base item + variation
+  const getBaseVariationId = (item, variation) => {
+    const base = String(item.id).toLowerCase().replace(/\s+/g, "-");
+    const variationPart = variation?.id
+      ? String(variation.id).toLowerCase()
+      : "default";
+    return `${base}-${variationPart}`;
+  };
 
   // Login function
   const login = async (phoneNumber, firebaseUid) => {
@@ -204,6 +213,42 @@ export const AppContextProvider = ({ children }) => {
     }, 3000);
   };
 
+  // Add to cart
+  const addToCartWithAddons = (item, variation, addons) => {
+    const id = getBaseVariationId(item, variation);
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      if (prev[id]) {
+        // Add new addons set for this instance
+        prev[id].quantity += 1;
+        prev[id].addonsList.push(addons.map((a) => a.name));
+      } else {
+        prev[id] = {
+          ...item,
+          variation,
+          quantity: 1,
+          addonsList: [addons.map((a) => a.name)],
+        };
+      }
+      return prev;
+    });
+  };
+
+  // Remove one instance (by index) or all of a base+variation
+  const removeOneFromCart = (id, index = null) => {
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      if (!prev[id]) return prev;
+      if (index !== null && prev[id].addonsList.length > 1) {
+        prev[id].addonsList.splice(index, 1);
+        prev[id].quantity -= 1;
+      } else {
+        delete prev[id];
+      }
+      return prev;
+    });
+  };
+
   // Remove item from cart
   const removeFromCart = (itemId) => {
     setCart(cart.filter((item) => item.id !== itemId));
@@ -215,12 +260,41 @@ export const AppContextProvider = ({ children }) => {
     setCart([]);
   };
 
-  // Update item quantity in cart
-  const updateCartItemQuantity = (itemId, quantity) => {
-    const updatedCart = cart.map((item) =>
-      item.id === itemId ? { ...item, quantity } : item
-    );
-    setCart(updatedCart);
+  // Update quantity (for all instances)
+  const updateCartItemQuantity = (id, newQuantity) => {
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      if (!prev[id]) return prev;
+      prev[id].quantity = newQuantity;
+      // Adjust addonsList length
+      if (newQuantity < prev[id].addonsList.length) {
+        prev[id].addonsList = prev[id].addonsList.slice(0, newQuantity);
+      }
+      return prev;
+    });
+  };
+
+  // Price calculation
+  const getCartTotals = () => {
+    let baseTotal = 0;
+    let addonTotal = 0;
+    Object.values(cart).forEach((entry) => {
+      const basePrice =
+        (parseFloat(entry.price) +
+          (entry.variation ? parseFloat(entry.variation.price) || 0 : 0)) *
+        entry.quantity;
+      baseTotal += basePrice;
+      // Sum all addons for all instances
+      entry.addonsList.forEach((addons) => {
+        addonTotal +=
+          addons.reduce((sum, addonName) => {
+            // You may want to map addonName to price here if needed
+            // For now, assume you have a lookup or pass price in the addon object
+            return sum + 0; // Replace 0 with actual price lookup
+          }, 0) || 0;
+      });
+    });
+    return { baseTotal, addonTotal, total: baseTotal + addonTotal };
   };
 
   const value = {
@@ -249,6 +323,11 @@ export const AppContextProvider = ({ children }) => {
     loading,
     clearCart,
     addToCartWithQuantity,
+    getCartTotals,
+    addToCartWithAddons,
+    removeOneFromCart,
+    updateCartItemQuantity,
+    getBaseVariationId,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
