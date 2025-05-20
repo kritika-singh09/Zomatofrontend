@@ -21,7 +21,7 @@ const CATEGORY_NAMES = {
   // Add more categories as needed
 };
 
-const Recommendation = ({ food }) => {
+const Recommendation = ({ food, onFoodClick }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [originalCategories, setOriginalCategories] = useState([]);
@@ -222,6 +222,12 @@ const Recommendation = ({ food }) => {
     return <div className="p-3 bg-white text-red-500">{error}</div>;
   }
 
+  const handleItemClick = (item) => {
+    if (onFoodClick) {
+      onFoodClick(item);
+    }
+  };
+
   return (
     <div className="p-3 bg-white">
       <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
@@ -320,7 +326,11 @@ const Recommendation = ({ food }) => {
               {expandedAccordion === category.name && (
                 <div className="p-3 space-y-4">
                   {category.items.map((item) => (
-                    <div key={item.id} className="flex gap-3">
+                    <div
+                      key={item.id}
+                      className="flex gap-3 cursor-pointer"
+                      onClick={(e) => handleItemClick(item, e)}
+                    >
                       {/* Item image */}
                       <img
                         src={item.image}
@@ -361,7 +371,10 @@ const Recommendation = ({ food }) => {
                               {item.priceFormatted || `₹${item.price}`}
                             </div>
                             <div className="item-actions">
-                              <AddToCartButton item={item} />
+                              <AddToCartButton
+                                item={item}
+                                onFoodClick={() => onFoodClick(item)}
+                              />
                             </div>
                             {/* {getItemQuantityInCart(item.id) > 0 ? (
                               <div className="mt-1 flex items-center justify-end">

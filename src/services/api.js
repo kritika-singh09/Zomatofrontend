@@ -1,4 +1,3 @@
-// src/services/api.js
 const API_URL = "https://hotelbuddhaavenue.vercel.app/api/user/items";
 const CACHE_KEY = "foodItemsCache";
 const CACHE_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
@@ -40,6 +39,8 @@ export const fetchFoodItems = async () => {
       description: item.description,
       longDescription: item.longDescription,
       quantity: item.quantity,
+      variation: item.variation || [],
+      addon: item.addon || [],
     }));
 
     // Store in cache with timestamp

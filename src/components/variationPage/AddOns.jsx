@@ -1,36 +1,56 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { VscDiffModified } from "react-icons/vsc";
 
-const AddOns = () => {
+const AddOns = ({ food, onAddonsChange }) => {
+  const [selectedAddons, setSelectedAddons] = useState([]);
+
+  // Reset selected addons when food changes
+  useEffect(() => {
+    setSelectedAddons([]);
+    onAddonsChange?.([]);
+  }, [food, onAddonsChange]);
+
+  const handleToggle = (addon) => {
+    let updated;
+    if (selectedAddons.some((a) => a.id === addon.id)) {
+      updated = selectedAddons.filter((a) => a.id !== addon.id);
+    } else {
+      updated = [...selectedAddons, addon];
+    }
+    setSelectedAddons(updated);
+    onAddonsChange?.(updated);
+  };
+
+  if (!food?.addon?.length) return null;
+
   return (
     <div className="bg-white rounded-xl px-2.5 py-3.5 mx-3 my-4">
       <div>
         <h1 className="text-base font-medium ">Toppings</h1>
         <p className="text-sm text-gray-600 border-b-1 border-gray-300 pb-4">
-          Select up to 10 options
+          Select up to {food.addon.length} options
         </p>
       </div>
       <div>
-        <div className="flex justify-between  my-6 text-md">
-          <div className="flex items-center gap-2">
-            <VscDiffModified className="text-green-600" />
-            <span>Paneer</span>
-          </div>
-          <div className="flex gap-2">
-            <label htmlFor="">₹40</label>
-            <input type="checkbox" name="" id="" />
-          </div>
-        </div>
-        <div className="flex justify-between  my-6 text-md">
-          <div className="flex items-center gap-2">
-            <VscDiffModified className="text-green-600" />
-            <span>Paneer</span>
-          </div>
-          <div className="flex gap-2">
-            <label htmlFor="">₹40</label>
-            <input type="checkbox" name="" id="" />
-          </div>
-        </div>
+        {food.addon.map((addon) => (
+          <label
+            key={addon.id}
+            className={`flex items-center p-2 rounded cursor-pointer border ${
+              selectedAddons.some((a) => a.id === addon.id)
+                ? "border-blue-600 bg-blue-50"
+                : "border-gray-200"
+            }`}
+          >
+            <input
+              type="checkbox"
+              checked={selectedAddons.some((a) => a.id === addon.id)}
+              onChange={() => handleToggle(addon)}
+              className="mr-2 accent-blue-600"
+            />
+            <span className="flex-1">{addon.name}</span>
+            <span className="font-medium">₹{addon.price}</span>
+          </label>
+        ))}
       </div>
     </div>
   );

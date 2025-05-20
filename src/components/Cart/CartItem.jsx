@@ -29,8 +29,14 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {
 
         <div className="flex-1">
           <h3 className="font-medium">{item.name}</h3>
-          <p className="text-sm text-gray-500">{item.restaurant}</p>
-          <p className="text-sm font-medium">{item.price}</p>
+          {(item.variationDetails || item.addonDetails) && (
+            <div className="text-xs text-gray-500 mb-1">
+              {item.variationDetails && <span>{item.variationDetails} </span>}
+              {item.addonDetails && <span>{item.addonDetails}</span>}
+            </div>
+          )}
+          {/* <p className="text-sm text-gray-500">{item.restaurant}</p> */}
+          <p className="text-sm font-medium">₹{item.price}</p>
         </div>
         {/* Quantity controls */}
         <div className="flex justify-between items-center ">

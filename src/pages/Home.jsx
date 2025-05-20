@@ -25,7 +25,7 @@ const Home = () => {
       <Header />
       <FoodSlider />
       <FoodItemGrid onFoodClick={handleFoodClick} />
-      <Recommendation />
+      <Recommendation onFoodClick={handleFoodClick} />
       <CartButton />
       <BottomSheetModal open={open} onClose={() => setOpen(false)}>
         <VariationPage food={selectedFood} onClose={handleClose} />
