@@ -14,11 +14,11 @@ const Header = () => {
   const [AddressLine1, setAddressLine1] = useState(["Azad Colony "]);
   const [AddressLine2, setAddressLine2] = useState(["Abc Colony "]);
   const [toggle, setToggle] = useState(false);
-  const { logout, user } = useAppContext();
+  const { logout, user, navigate } = useAppContext();
   const [showMenu, setShowMenu] = useState(false);
 
   const handleProfileClick = () => {
-    setShowMenu(!showMenu);
+    navigate("/profile");
   };
 
   return (

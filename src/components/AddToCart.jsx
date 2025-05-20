@@ -3,8 +3,7 @@ import { useAppContext } from "../context/AppContext";
 import { AiOutlinePlus, AiOutlineMinus, AiOutlineDelete } from "react-icons/ai";
 
 const AddToCartButton = ({ item, onFoodClick }) => {
-  const { cart, addToCart, removeFromCart, updateCartItemQuantity } =
-    useAppContext();
+  const { cart, removeFromCart } = useAppContext();
 
   // Check if item is valid before proceeding
   if (!item || !item.id) {
@@ -19,12 +18,40 @@ const AddToCartButton = ({ item, onFoodClick }) => {
   }
 
   // Get item quantity in cart
-  const getItemQuantity = () => {
-    const cartItem = cart.find((cartItem) => cartItem.id === item.id);
-    return cartItem ? cartItem.quantity : 0;
+  const getItemDetails = () => {
+    // First check for exact ID match
+    const exactMatch = cart.find((cartItem) => cartItem.id === item.id);
+
+    // Find all variations of this item
+    const variations = cart.filter((cartItem) =>
+      cartItem.id.startsWith(`${item.id}-`)
+    );
+
+    // Calculate total quantity across all variations
+    const variationsQuantity = variations.reduce(
+      (total, variant) => total + variant.quantity,
+      0
+    );
+
+    // If we have an exact match, add its quantity to the variations quantity
+    const totalQuantity = exactMatch
+      ? exactMatch.quantity + variationsQuantity
+      : variationsQuantity;
+
+    // Get the ID to use for cart operations (prefer exact match if available)
+    const cartItemId = exactMatch
+      ? exactMatch.id
+      : variations.length > 0
+      ? variations[0].id
+      : item.id;
+
+    return {
+      quantity: totalQuantity,
+      cartItemId: cartItemId,
+    };
   };
 
-  const quantity = getItemQuantity();
+  const { quantity, cartItemId } = getItemDetails();
 
   if (quantity > 0) {
     return (
@@ -34,9 +61,9 @@ const AddToCartButton = ({ item, onFoodClick }) => {
           onClick={(e) => {
             e.stopPropagation();
             if (quantity === 1) {
-              removeFromCart(item.id);
+              removeFromCart(cartItemId);
             } else {
-              updateCartItemQuantity(item.id, quantity - 1);
+              onFoodClick(item);
             }
           }}
         >
@@ -50,10 +77,10 @@ const AddToCartButton = ({ item, onFoodClick }) => {
           {quantity}
         </span>
         <button
-          className="w-8 h-8  bg-light text-primary flex items-center justify-center"
+          className="w-8 h-8 bg-light text-primary flex items-center justify-center"
           onClick={(e) => {
             e.stopPropagation();
-            updateCartItemQuantity(item.id, quantity + 1);
+            onFoodClick(item);
           }}
         >
           <AiOutlinePlus size={16} />
@@ -67,11 +94,7 @@ const AddToCartButton = ({ item, onFoodClick }) => {
       className="px-4 py-1 w-20 bg-light text-primary cursor-pointer border border-red-800 rounded-md transition-all ease-in-out duration-300"
       onClick={(e) => {
         e.stopPropagation();
-        if (onFoodClick) {
-          onFoodClick(item);
-        } else {
-          addToCart(item);
-        }
+        onFoodClick(item);
       }}
     >
       Add

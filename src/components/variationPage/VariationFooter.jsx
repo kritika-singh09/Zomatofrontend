@@ -1,19 +1,43 @@
 // src/components/variationPage/VariationFooter.jsx
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
 import { useAppContext } from "../../context/AppContext";
 
 const VariationFooter = ({ food, onClose }) => {
-  const { cart, addToCartWithQuantity } = useAppContext();
+  const { cart, addToCartWithQuantity, removeFromCart } = useAppContext();
   const [quantity, setQuantity] = useState(1);
 
   // Get current quantity from cart
   useEffect(() => {
-    if (food) {
-      const cartItem = cart.find((item) => item.id === food.id);
-      if (cartItem) {
-        setQuantity(cartItem.quantity);
+    if (food && food.id) {
+      // Check for exact match first
+      const exactMatch = cart.find((item) => item.id === food.id);
+      if (exactMatch) {
+        setQuantity(exactMatch.quantity);
+        return;
+      }
+
+      // If no exact match but this is a variation, check the base item
+      if (food.id.includes("-")) {
+        const baseId = food.id.split("-")[0];
+        const baseItem = cart.find((item) => item.id === baseId);
+        if (baseItem) {
+          setQuantity(baseItem.quantity);
+          return;
+        }
+      }
+
+      // If this is a base item, check for variations
+      const variations = cart.filter((item) =>
+        item.id.startsWith(`${food.id}-`)
+      );
+
+      if (variations.length > 0) {
+        // If variations exist, set quantity to the first variation's quantity
+        setQuantity(variations[0].quantity);
+      } else {
+        // No item in cart, start with 1
+        setQuantity(1);
       }
     }
   }, [food, cart]);
@@ -25,13 +49,21 @@ const VariationFooter = ({ food, onClose }) => {
   const handleDecrement = () => {
     if (quantity > 1) {
       setQuantity((prev) => prev - 1);
+    } else if (quantity === 1) {
+      // Remove item from cart when quantity is 1
+      if (food && food.id) {
+        removeFromCart(food.id);
+        if (typeof onClose === "function") {
+          onClose();
+        }
+      }
     }
   };
 
   const handleAddToCart = () => {
     if (!food) return;
 
-    // Use the addToCartWithQuantity function to handle all cases
+    // Add to cart with the selected quantity
     addToCartWithQuantity(food, quantity);
 
     // Close the modal

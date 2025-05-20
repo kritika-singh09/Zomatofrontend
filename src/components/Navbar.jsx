@@ -7,9 +7,9 @@ const Navbar = () => {
   };
   return (
     // Mobile view
-    <div>
-      <div className="text-2xl flex relative font-normal p-2">
-        <GoArrowLeft className="absolute my-1" onClick={handleBack} />
+    <div className="bg-gray-200 w-full">
+      <div className="text-2xl flex  font-normal p-2">
+        <GoArrowLeft className=" my-1" onClick={handleBack} />
       </div>
     </div>
   );

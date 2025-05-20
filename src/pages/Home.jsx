@@ -6,10 +6,12 @@ import FoodItemGrid from "../components/HomePage/FoodItemGrid";
 import CartButton from "../components/CartButton";
 import BottomSheetModal from "../components/BottomSheetModal";
 import VariationPage from "./VariationPage";
+import { useAppContext } from "../context/AppContext";
 
 const Home = () => {
   const [open, setOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState(null);
+  const { cart } = useAppContext();
 
   const handleFoodClick = (food) => {
     setSelectedFood(food);

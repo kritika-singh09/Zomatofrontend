@@ -13,6 +13,7 @@ import Login from "./pages/Login.jsx";
 import Navbar from "./components/Navbar.jsx";
 import VariationPage from "./pages/VariationPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
+import Profile from "./pages/Profile.jsx";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -90,6 +91,15 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/profile"
+          element={
+            <>
+              <Navbar />
+              <Profile />
+            </>
+          }
+        />
+        {/* <Route
           path="/variation"
           element={
             <>
@@ -97,7 +107,7 @@ const AppRoutes = () => {
               <VariationPage />
             </>
           }
-        />
+        /> */}
       </Routes>
     </>
   );
