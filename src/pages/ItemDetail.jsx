@@ -63,7 +63,10 @@ const ItemDetail = () => {
     }, 3000);
   };
 
-  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+  const totalItems = Object.values(cart).reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   return (
     <div className="p-3 pb-24">

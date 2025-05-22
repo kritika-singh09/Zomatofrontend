@@ -46,7 +46,7 @@ const ItemCustomizationModal = ({
   if (!item || !shouldRender) return null;
 
   // Get all variations of this item in the cart
-  const itemVariations = cart.filter((cartItem) =>
+  const itemVariations = Object.values(cart).filter((cartItem) =>
     cartItem.id.startsWith(`${item.id.split("-")[0]}-`)
   );
 

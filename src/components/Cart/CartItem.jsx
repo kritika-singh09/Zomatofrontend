@@ -41,14 +41,18 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {
         {/* Quantity controls */}
         <div className="flex justify-between items-center ">
           <div className="flex items-center">
-            <button className=" cursor-pointer w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-md bg-gray-50 text-gray-600 hover:bg-gray-100">
+            <button
+              className="cursor-pointer w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-md bg-gray-50 text-gray-600 hover:bg-gray-100"
+              onClick={() =>
+                item.quantity <= 1
+                  ? onRemoveItem(item.id)
+                  : onUpdateQuantity(item.id, item.quantity - 1)
+              }
+            >
               {item.quantity <= 1 ? (
-                <FaTrash size={12} onClick={() => onRemoveItem(item.id)} />
+                <FaTrash size={12} />
               ) : (
-                <FaMinus
-                  size={12}
-                  onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                />
+                <FaMinus size={12} />
               )}
             </button>
             <span className="w-10 h-8 flex items-center justify-center border-t border-b border-gray-300 bg-white">

@@ -32,7 +32,7 @@ const FoodCard = memo(({ food, onFoodClick }) => {
 
   // Get item quantity in cart
   const getItemQuantityInCart = (itemId) => {
-    const cartItem = cart.find((item) => item.id === itemId);
+    const cartItem = Object.values(cart).find((item) => item.id === itemId);
     return cartItem ? cartItem.quantity : 0;
   };
 

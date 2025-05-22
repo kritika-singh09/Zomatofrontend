@@ -42,7 +42,8 @@ const VariationPage = ({
 
   // Get quantity for this base+variation from cart
   const cartQuantity =
-    cart.find((item) => item.id === baseVariationId)?.quantity || 0;
+    Object.values(cart).find((item) => item.id === baseVariationId)?.quantity ||
+    0;
 
   const onClose = propOnClose || (() => navigate(-1));
 
@@ -81,7 +82,7 @@ const VariationPage = ({
     currentItemIdRef.current = itemId;
 
     // Find this specific item in cart
-    const exactMatch = cart.find((item) => item.id === itemId);
+    const exactMatch = Object.values(cart).find((item) => item.id === itemId);
     initialQuantityRef.current = exactMatch ? exactMatch.quantity : 0;
 
     isFirstRender.current = false;
@@ -159,7 +160,7 @@ const VariationPage = ({
   }
 
   const instances = Array.isArray(cart)
-    ? cart.filter((item) =>
+    ? Object.values(cart).filter((item) =>
         item.id.startsWith(
           `${stableFood.id}-${selectedVariation?.id || "default"}`
         )
@@ -176,11 +177,12 @@ const VariationPage = ({
       <Message />
 
       {/* Show all instances (with their addons) for this base+variation */}
-      {cart.filter((item) => item.id.startsWith(`${stableFood.id}-`)).length >
-        0 && (
+      {Object.values(cart).filter((item) =>
+        item.id.startsWith(`${stableFood.id}-`)
+      ).length > 0 && (
         <div className="bg-white rounded-xl px-2.5 py-3.5 mx-3 my-4">
           <h3 className="text-base font-medium mb-2">Current Items in Cart</h3>
-          {cart
+          {Object.values(cart)
             .filter((item) => item.id.startsWith(`${stableFood.id}-`))
             .map((item, idx) => (
               <div

@@ -8,11 +8,12 @@ import { useAppContext } from "../context/AppContext";
 import { FaTrash } from "react-icons/fa";
 
 const CartPage = () => {
-  // Sample cart items - in a real app, this would come from context or state management
   const { cart, updateCartItemQuantity, removeFromCart, clearCart } =
     useAppContext();
 
-  const formattedCart = cart.map((item) => ({
+  const cartArray = Object.values(cart);
+
+  const formattedCart = cartArray.map((item) => ({
     ...item,
     price: typeof item.price === "string" ? item.price : `₹${item.price}`,
   }));
@@ -44,7 +45,7 @@ const CartPage = () => {
   };
 
   // Calculate subtotal
-  const subtotal = cart.reduce((total, item) => {
+  const subtotal = cartArray.reduce((total, item) => {
     // Handle price whether it's a number or string
     const price =
       typeof item.price === "number"
@@ -68,7 +69,7 @@ const CartPage = () => {
 
   return (
     <div className="p-4 pb-32">
-      {cart.length > 0 && (
+      {Object.keys(cart).length > 0 && (
         <div className="flex justify-end mb-0">
           <button
             onClick={clearCart}
@@ -79,7 +80,7 @@ const CartPage = () => {
           </button>
         </div>
       )}
-      {cart.length === 0 ? (
+      {Object.keys(cart).length === 0 ? (
         <div className="bg-white p-8 text-center">
           <p className="text-gray-500 mb-4">Your cart is empty</p>
           <button
@@ -160,7 +161,7 @@ const CartPage = () => {
         </div>
       )}
       {/* Fixed bottom section with bill details and address button */}
-      {cart.length > 0 && (
+      {Object.keys(cart).length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 p-4">
           {/* Bill Details Component with sliding panel */}
           <BillDetail

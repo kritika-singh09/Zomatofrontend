@@ -19,7 +19,7 @@ const Home = () => {
 
   const handleFoodClick = (food) => {
     // Check if this item already has customizations in the cart
-    const existingCustomizations = cart.filter(
+    const existingCustomizations = Object.values(cart).filter(
       (item) =>
         item.id.startsWith(`${food.id}-`) &&
         (item.selectedVariation || item.selectedAddons?.length > 0)

@@ -189,25 +189,13 @@ export const AppContextProvider = ({ children }) => {
       return;
     }
 
-    // Check if item already exists in cart
-    const existingItemIndex = cart.findIndex(
-      (cartItem) => cartItem.id === item.id
-    );
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      prev[item.id] = { ...item, quantity };
+      return prev;
+    });
 
-    if (existingItemIndex !== -1) {
-      // If item exists, set to the specified quantity
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity = quantity;
-      setCart(updatedCart);
-    } else {
-      // If item doesn't exist, add it with the specified quantity
-      setCart([...cart, { ...item, quantity, id: item.id }]);
-    }
-
-    // Show notification
     setShowCartNotification(true);
-
-    // Hide notification after 3 seconds
     setTimeout(() => {
       setShowCartNotification(false);
     }, 3000);
@@ -251,25 +239,41 @@ export const AppContextProvider = ({ children }) => {
 
   // Remove item from cart
   const removeFromCart = (itemId) => {
-    setCart(cart.filter((item) => item.id !== itemId));
+    setCart((prevCart) => {
+      const newCart = { ...prevCart };
+      delete newCart[itemId];
+      return newCart;
+    });
   };
 
   // Empty Cart
   const clearCart = () => {
-    alert("Delete all the items of the cart?");
-    setCart([]);
+    if (window.confirm("Delete all the items of the cart?")) {
+      setCart({});
+    }
   };
 
   // Update quantity (for all instances)
-  const updateCartItemQuantity = (id, newQuantity) => {
+  const updateCartItemQuantity = (id, newQuantity, newAddons = []) => {
     setCart((prevCart) => {
       const prev = { ...prevCart };
       if (!prev[id]) return prev;
-      prev[id].quantity = newQuantity;
-      // Adjust addonsList length
-      if (newQuantity < prev[id].addonsList.length) {
-        prev[id].addonsList = prev[id].addonsList.slice(0, newQuantity);
+
+      // If increasing, add a new addons set (empty or from newAddons)
+      if (newQuantity > prev[id].quantity) {
+        prev[id].quantity = newQuantity;
+        prev[id].addonsList.push(newAddons.length ? newAddons : []);
       }
+      // If decreasing, remove the last addons set
+      else if (newQuantity < prev[id].quantity) {
+        prev[id].quantity = newQuantity;
+        prev[id].addonsList.pop();
+        // If quantity is now 0, remove the item
+        if (prev[id].quantity <= 0) {
+          delete prev[id];
+        }
+      }
+      // If equal, do nothing
       return prev;
     });
   };

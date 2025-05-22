@@ -10,7 +10,10 @@ const CartButton = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   // Calculate total items in cart
-  const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+  const totalItems = Object.values(cart).reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   // Show button animation when cart changes
   useEffect(() => {

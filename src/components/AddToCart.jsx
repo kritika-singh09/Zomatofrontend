@@ -20,10 +20,12 @@ const AddToCartButton = ({ item, onFoodClick }) => {
   // Get item quantity in cart
   const getItemDetails = () => {
     // First check for exact ID match
-    const exactMatch = cart.find((cartItem) => cartItem.id === item.id);
+    const exactMatch = Object.values(cart).find(
+      (cartItem) => cartItem.id === item.id
+    );
 
     // Find all variations of this item
-    const variations = cart.filter((cartItem) =>
+    const variations = Object.values(cart).filter((cartItem) =>
       cartItem.id.startsWith(`${item.id}-`)
     );
 
