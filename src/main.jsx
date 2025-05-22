@@ -14,6 +14,7 @@ import Navbar from "./components/Navbar.jsx";
 import VariationPage from "./pages/VariationPage.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import Profile from "./pages/Profile.jsx";
+import ProfileUpdate from "./components/ProfileUpdate.jsx";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -96,6 +97,15 @@ const AppRoutes = () => {
             <>
               <Navbar />
               <Profile />
+            </>
+          }
+        />
+        <Route
+          path="/profile-update"
+          element={
+            <>
+              <Navbar></Navbar>
+              <ProfileUpdate />
             </>
           }
         />

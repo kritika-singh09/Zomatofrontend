@@ -12,7 +12,11 @@ import { FaToggleOn } from "react-icons/fa";
 import { FaToggleOff } from "react-icons/fa";
 
 const ProfileCards = () => {
-  const { logout } = useAppContext();
+  const { logout, navigate } = useAppContext();
+
+  const openProfile = () => {
+    navigate("/profile-update");
+  };
 
   return (
     <div>
@@ -37,7 +41,10 @@ const ProfileCards = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 my-3 px-3 py-5 bg-white shadow-xs rounded-lg mx-3">
+      <div
+        className="flex items-center gap-2 my-3 px-3 py-5 bg-white shadow-xs rounded-lg mx-3 cursor-pointer"
+        onClick={openProfile}
+      >
         <div className="flex items-center rounded-full overflow-hidden w-[30px]">
           <CiUser className="text-gray-500 text-3xl bg-gray-200 rounded-full  p-1.5" />
         </div>
