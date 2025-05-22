@@ -158,6 +158,44 @@ export const AppContextProvider = ({ children }) => {
     navigate("/login");
   };
 
+  // Update user profile function
+  const updateUserProfile = async (userData) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/auth/update`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Update local user data
+        const updatedUser = { ...user, ...userData };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        return {
+          success: true,
+          message: data.message || "Profile updated successfully",
+        };
+      } else {
+        return {
+          success: false,
+          message: data.message || "Failed to update profile",
+        };
+      }
+    } catch (error) {
+      console.error("Profile update error:", error);
+      return { success: false, message: "Network error. Please try again." };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Add item to cart
   const addToCart = (item) => {
     // Check if item already exists in cart
@@ -332,6 +370,7 @@ export const AppContextProvider = ({ children }) => {
     removeOneFromCart,
     updateCartItemQuantity,
     getBaseVariationId,
+    updateUserProfile,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

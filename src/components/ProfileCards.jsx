@@ -51,7 +51,7 @@ const ProfileCards = () => {
         <div className="flex items-center justify-between w-full">
           <h1 className="text-md font-normal">Your profile</h1>
           <div className="flex items-center gap-2">
-            <p className="text-sm text-gray-500">Complete your profile</p>
+            <p className="text-sm text-gray-500">Update your profile</p>
             <IoIosArrowForward className="mt-1 text-xl text-gray-500" />
           </div>
         </div>
