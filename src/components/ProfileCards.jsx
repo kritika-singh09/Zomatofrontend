@@ -10,12 +10,20 @@ import { IoPower } from "react-icons/io5";
 import { VscDiffModified } from "react-icons/vsc";
 import { FaToggleOn } from "react-icons/fa";
 import { FaToggleOff } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const ProfileCards = () => {
-  const { logout, navigate } = useAppContext();
+  const { logout, navigate, vegModeEnabled, toggleVegMode } = useAppContext();
 
   const openProfile = () => {
     navigate("/profile-update");
+  };
+
+  const handleVegModeToggle = () => {
+    toggleVegMode();
+    toast.success(
+      vegModeEnabled ? "Veg mode turned off" : "Veg mode turned on"
+    );
   };
 
   return (
@@ -56,7 +64,10 @@ const ProfileCards = () => {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3">
+      <div
+        className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3 cursor-pointer"
+        onClick={() => navigate("/orders")}
+      >
         <div className="flex items-center  rounded-full overflow-hidden">
           <HiOutlineShoppingBag className="text-gray-500 text-3xl bg-gray-200 rounded-full p-1.5" />
         </div>
@@ -67,14 +78,21 @@ const ProfileCards = () => {
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3">
-        <div className="flex items-center  rounded-full overflow-hidden">
+      <div
+        className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3 cursor-pointer"
+        onClick={handleVegModeToggle}
+      >
+        <div className="flex items-center rounded-full overflow-hidden">
           <VscDiffModified className="text-green-600 text-3xl bg-gray-200 rounded-full p-1.5" />
         </div>
         <div className="flex items-center justify-between w-full">
           <h1 className="text-md font-normal">Veg Mode</h1>
           <div className="flex items-center gap-2">
-            <FaToggleOn className="mt-1 text-3xl text-green-700" />
+            {vegModeEnabled ? (
+              <FaToggleOn className="mt-1 text-3xl text-green-700" />
+            ) : (
+              <FaToggleOff className="mt-1 text-3xl text-gray-400" />
+            )}
           </div>
         </div>
       </div>

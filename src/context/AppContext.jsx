@@ -17,6 +17,9 @@ export const AppContextProvider = ({ children }) => {
     JSON.parse(localStorage.getItem("user")) || null
   );
   const [loading, setLoading] = useState(false);
+  const [vegModeEnabled, setVegModeEnabled] = useState(
+    localStorage.getItem("vegMode") === "true" || false
+  );
   const [foodItem, setFoodItem] = useState({
     name: "Biryani",
     price: "150",
@@ -316,6 +319,13 @@ export const AppContextProvider = ({ children }) => {
     });
   };
 
+  // Toggle veg mode from the profile
+  const toggleVegMode = () => {
+    const newValue = !vegModeEnabled;
+    setVegModeEnabled(newValue);
+    localStorage.setItem("vegMode", newValue);
+  };
+
   // Price calculation
   const getCartTotals = () => {
     let baseTotal = 0;
@@ -371,6 +381,8 @@ export const AppContextProvider = ({ children }) => {
     updateCartItemQuantity,
     getBaseVariationId,
     updateUserProfile,
+    vegModeEnabled,
+    toggleVegMode,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

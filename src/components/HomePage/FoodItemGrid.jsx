@@ -1,16 +1,18 @@
 import React, { useMemo, useState, useEffect } from "react";
 import FoodCard from "./FoodCard";
 import { fetchFoodItems } from "../../services/api";
+import { useAppContext } from "../../context/AppContext";
 
 const FoodItemGrid = ({ onFoodClick }) => {
   const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { vegModeEnabled } = useAppContext();
 
   // Sort food items by rating in descending order and take only the top 6
-  const topRatedFoodItems = [...foodItems]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 6);
+  // const topRatedFoodItems = [...foodItems]
+  //   .sort((a, b) => b.rating - a.rating)
+  //   .slice(0, 6);
 
   useEffect(() => {
     const loadFoodItems = async () => {
@@ -26,9 +28,21 @@ const FoodItemGrid = ({ onFoodClick }) => {
         setLoading(false);
       }
     };
-
     loadFoodItems();
   }, []);
+
+  // Filter items based on veg mode
+  const filteredItems = useMemo(() => {
+    if (vegModeEnabled) {
+      return foodItems.filter((item) => item.veg === true);
+    }
+    return foodItems;
+  }, [foodItems, vegModeEnabled]);
+
+  // Sort filtered items by rating and take top 6
+  const topItems = useMemo(() => {
+    return [...filteredItems].sort((a, b) => b.rating - a.rating).slice(0, 6);
+  }, [filteredItems]);
 
   return (
     <div className="mt-8 px-4">
@@ -49,7 +63,7 @@ const FoodItemGrid = ({ onFoodClick }) => {
       {/* Flex layout with exactly 3 cards per row */}
       {!loading && !error && (
         <div className="flex flex-wrap -mx-2">
-          {topRatedFoodItems.map((food) => (
+          {topItems.map((food) => (
             <FoodCard key={food.id} food={food} onFoodClick={onFoodClick} />
           ))}
         </div>

@@ -25,13 +25,14 @@ const Header = () => {
     <>
       <div className="flex justify-between ">
         <div className=" flex items-center m-2 text-xl w-[200px]">
-          <FaLocationDot className=" text-red-500" />
-          <div className="px-2 font-bold">
-            {AddressLine1.map((item, index) => {
-              return <h1 key={index}>{item}</h1>;
-            })}
+          <div className="flex flex-col">
+            <div className="font-bold flex items-center gap-1 text-xl">
+              <FaLocationDot className=" text-red-500" />
+              {AddressLine1}
+              <RiArrowDropDownLine className="text-lg " />
+            </div>
+            <div className="text-sm ml-2">{AddressLine2}</div>
           </div>
-          <RiArrowDropDownLine className="text-lg " />
         </div>
 
         <div className="flex items-center text-2xl">
@@ -60,11 +61,11 @@ const Header = () => {
           </div>
         </div>
       </div>
-      <div className="px-9">
+      {/* <div className="px-9">
         {AddressLine2.map((item, index) => {
           return <h1 key={index}>{item}</h1>;
         })}
-      </div>
+      </div> */}
       <div className=" flex justify-between mt-2 ">
         <div className="flex relative rounded-lg justify-center items-center flex-grow ">
           <FaSearch className="text-2xl text-red-600 absolute left-8  bottom-2 " />

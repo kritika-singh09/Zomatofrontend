@@ -31,8 +31,13 @@ const Recommendation = ({ food, onFoodClick }) => {
   const [activeQuickFilter, setActiveQuickFilter] = useState(null);
   const [expandedAccordion, setExpandedAccordion] = useState(null);
 
-  const { addToCart, cart, removeFromCart, updateCartItemQuantity } =
-    useAppContext();
+  const {
+    addToCart,
+    cart,
+    removeFromCart,
+    updateCartItemQuantity,
+    vegModeEnabled,
+  } = useAppContext();
 
   const getItemQuantityInCart = (itemId) => {
     const cartItem = Object.values(cart).find((item) => item.id === itemId);
@@ -122,6 +127,14 @@ const Recommendation = ({ food, onFoodClick }) => {
     // Create a deep copy of the original categories
     let newCategories = JSON.parse(JSON.stringify(originalCategories));
 
+    // First apply veg mode filter if enabled
+    if (vegModeEnabled) {
+      newCategories = newCategories.map((category) => {
+        const vegItems = category.items.filter((item) => item.veg === true);
+        return { ...category, items: vegItems };
+      });
+    }
+
     // Apply quick filter if active
     if (activeQuickFilter) {
       newCategories = newCategories.map((category) => {
@@ -180,7 +193,7 @@ const Recommendation = ({ food, onFoodClick }) => {
     );
 
     setFilteredCategories(newCategories);
-  }, [activeFilter, activeQuickFilter, originalCategories]);
+  }, [activeFilter, activeQuickFilter, originalCategories, vegModeEnabled]);
 
   // Toggle filter dropdown
   const toggleFilter = () => {
