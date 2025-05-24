@@ -58,3 +58,14 @@ export const fetchFoodItems = async () => {
     return [];
   }
 };
+
+export const fetchUserProfile = async (token) => {
+  const res = await fetch(
+    "https://hotelbuddhaavenue.vercel.app/api/user/data",
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  if (!res.ok) throw new Error("Failed to fetch user profile");
+  return res.json();
+};

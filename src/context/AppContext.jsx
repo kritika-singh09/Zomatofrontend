@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { fetchUserProfile } from "../services/api";
 
 export const AppContext = createContext();
 
@@ -199,6 +200,19 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+  const refreshUserProfile = async () => {
+    if (!token) return;
+    console.log("Calling refreshUserProfile, fetching from backend...");
+    try {
+      const data = await fetchUserProfile(token);
+      console.log(data);
+      setUser(data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    } catch (e) {
+      console.error("Failed to refresh user profile", e);
+    }
+  };
+
   // Add item to cart
   const addToCart = (item) => {
     // Check if item already exists in cart
@@ -383,6 +397,7 @@ export const AppContextProvider = ({ children }) => {
     updateUserProfile,
     vegModeEnabled,
     toggleVegMode,
+    refreshUserProfile,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

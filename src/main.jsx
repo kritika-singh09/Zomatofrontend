@@ -18,6 +18,8 @@ import ProfileUpdate from "./components/ProfileUpdate.jsx";
 import OrdersPage from "./pages/OrdersPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage.jsx";
+import OrderDetailsPage from "./pages/OrderDetailsPage.jsx";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -121,15 +123,11 @@ const AppRoutes = () => {
             </>
           }
         />
-        {/* <Route
-          path="/variation"
-          element={
-            <>
-              <Navbar />
-              <VariationPage />
-            </>
-          }
-        /> */}
+        <Route
+          path="/order-confirmation/:orderId?"
+          element={<OrderConfirmationPage />}
+        />
+        <Route path="/order/:orderId" element={<OrderDetailsPage />} />
       </Routes>
       <ToastContainer position="bottom-center" autoClose={3000} />
     </>
