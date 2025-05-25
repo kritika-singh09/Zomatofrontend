@@ -27,7 +27,7 @@ const ProfileCards = () => {
   };
 
   return (
-    <div>
+    <div className="max-w-xl mx-auto">
       <div className=" px-3 py-5 bg-white shadow-xs rounded-lg mx-2 my-5">
         <div className="flex items-center">
           <div className=" h-6 w-6 p-1 rounded-full bg-gray-200">
