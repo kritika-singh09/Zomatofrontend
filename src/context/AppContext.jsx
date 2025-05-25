@@ -201,15 +201,25 @@ export const AppContextProvider = ({ children }) => {
   };
 
   const refreshUserProfile = async () => {
-    if (!token) return;
-    console.log("Calling refreshUserProfile, fetching from backend...");
     try {
-      const data = await fetchUserProfile(token);
-      console.log(data);
-      setUser(data.user);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      console.log("Calling refreshUserProfile, fetching from backend...");
+      const data = await fetchUserProfile();
+
+      if (data.success && data.user) {
+        console.log("User profile fetched successfully:", data.user);
+        setUser(data.user);
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...JSON.parse(localStorage.getItem("user") || "{}"),
+            ...data.user,
+          })
+        );
+      } else {
+        console.warn("Failed to fetch user profile:", data.error);
+      }
     } catch (e) {
-      console.error("Failed to refresh user profile", e);
+      console.error("Error in refreshUserProfile:", e);
     }
   };
 

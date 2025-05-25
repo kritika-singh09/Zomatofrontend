@@ -59,13 +59,33 @@ export const fetchFoodItems = async () => {
   }
 };
 
-export const fetchUserProfile = async (token) => {
-  const res = await fetch(
-    "https://hotelbuddhaavenue.vercel.app/api/user/data",
-    {
-      headers: { Authorization: `Bearer ${token}` },
+export const fetchUserProfile = async () => {
+  try {
+    // Get the user data from localStorage
+    const userData = JSON.parse(localStorage.getItem("user"));
+    const firebaseUid = userData?.uid || userData?.firebaseUid;
+
+    if (!firebaseUid) {
+      console.warn("Firebase UID not found in user data");
+      return { success: false, error: "User ID not found" };
     }
-  );
-  if (!res.ok) throw new Error("Failed to fetch user profile");
-  return res.json();
+
+    // Use GET with query param
+    const res = await fetch(
+      "https://hotelbuddhaavenue.vercel.app/api/user/data",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ firebaseUid }),
+      }
+    );
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    return { success: false, error: error.message };
+  }
 };
