@@ -20,6 +20,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage.jsx";
+import SavedAddresses from "./pages/Addresses.jsx";
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -128,6 +129,15 @@ const AppRoutes = () => {
           element={<OrderConfirmationPage />}
         />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
+        <Route
+          path="/addresses"
+          element={
+            <>
+              <Navbar />
+              <SavedAddresses />
+            </>
+          }
+        />
       </Routes>
       <ToastContainer position="bottom-center" autoClose={3000} />
     </>

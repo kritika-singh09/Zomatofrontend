@@ -97,7 +97,10 @@ const ProfileCards = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3">
+      <div
+        className="flex items-center gap-2 px-3 py-5 my-3 bg-white shadow-xs rounded-lg mx-3"
+        onClick={() => navigate("/addresses")}
+      >
         <div className="flex items-center  rounded-full overflow-hidden">
           <BsBuildings className="text-gray-500 text-3xl bg-gray-200 rounded-full p-1.5" />
         </div>
