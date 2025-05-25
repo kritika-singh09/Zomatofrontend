@@ -12,7 +12,7 @@ const Profile = () => {
   }, []);
 
   return (
-    <div className="bg-gray-200 w-xl mx-auto h-screen">
+    <div className="bg-gray-200 max-w-xl mx-auto h-screen">
       {loading ? (
         <div className="flex justify-center items-center h-20">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-red-800"></div>

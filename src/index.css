@@ -101,3 +101,75 @@
     backdrop-filter: brightness(0.7);
   }
 }
+
+/* address modal  */
+/* Address modal animations */
+.address-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  animation: addressFadeIn 0.3s ease-out;
+}
+
+.address-modal-overlay.closing {
+  animation: addressFadeOut 0.3s ease-out forwards;
+}
+
+.address-modal-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: addressSlideIn 0.3s ease-out;
+}
+
+.address-modal-content.closing {
+  animation: addressSlideOut 0.3s ease-out forwards;
+}
+
+@keyframes addressFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes addressFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes addressSlideIn {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes addressSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+}
