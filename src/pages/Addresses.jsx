@@ -3,20 +3,22 @@ import { useAppContext } from "../context/AppContext";
 import { IoMdAdd } from "react-icons/io";
 import { FaHome, FaBriefcase, FaEdit, FaTrash } from "react-icons/fa";
 
-const ADDRESSES_CACHE_KEY = "userAddresses";
-
 const SavedAddresses = () => {
-  const { user } = useAppContext();
+  const {
+    user,
+    fetchAddresses,
+    addresses,
+    selectedAddressId,
+    setSelectedAddressId,
+    handleAddAddress,
+    handleDeleteAddress,
+    addressesLoading,
+  } = useAppContext();
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeType, setActiveType] = useState("home");
   const [isClosing, setIsClosing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedAddressId, setSelectedAddressId] = useState(
-    localStorage.getItem("selectedAddressId") || null
-  );
-
-  const [addresses, setAddresses] = useState([]);
 
   const [newAddress, setNewAddress] = useState({
     type: "home",
@@ -29,64 +31,6 @@ const SavedAddresses = () => {
   });
 
   // Fetch addresses from API
-  const fetchAddresses = async (forceRefresh = false) => {
-    try {
-      setLoading(true);
-
-      // Try to get cached addresses
-      if (!forceRefresh) {
-        const cached = localStorage.getItem(ADDRESSES_CACHE_KEY);
-        if (cached) {
-          setAddresses(JSON.parse(cached));
-          setError(null);
-          setLoading(false);
-          return;
-        }
-      }
-
-      const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/user/getaddresses",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            firebaseUid: user?.firebaseUid || user?.uid,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch addresses");
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        const addressList = data.addresses || [];
-        setAddresses(addressList);
-        localStorage.setItem(ADDRESSES_CACHE_KEY, JSON.stringify(addressList));
-        setError(null);
-      } else {
-        setError(data.message || "Failed to fetch addresses");
-      }
-    } catch (error) {
-      console.error("Error fetching addresses:", error);
-      setError("Network error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch addresses when component mounts
-  useEffect(() => {
-    if (user?.firebaseUid || user?.uid) {
-      fetchAddresses();
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
 
   const handleSelectAddress = (addressId) => {
     setSelectedAddressId(addressId);
@@ -109,158 +53,6 @@ const SavedAddresses = () => {
     }));
   };
 
-  const handleAddAddress = async (e) => {
-    e.preventDefault();
-
-    try {
-      // Add validation here
-      if (
-        !newAddress.house_no ||
-        !newAddress.street ||
-        !newAddress.city ||
-        !newAddress.state ||
-        !newAddress.pincode
-      ) {
-        alert("Please fill in all required fields");
-        return;
-      }
-
-      // Check if user is available
-      if (!user || (!user.firebaseUid && !user.uid)) {
-        alert("User information is missing. Please log in again.");
-        return;
-      }
-      // Get Firebase UID from user object
-      const firebaseUid = user.firebaseUid || user.uid;
-
-      // Generate a unique address ID
-      const address_id = `addr${Date.now().toString().slice(-6)}`;
-
-      // Format the address data according to the API requirements
-      const addressData = {
-        firebaseUid: firebaseUid, // Replace with actual user ID when available
-        address: {
-          address_id: address_id,
-          type:
-            newAddress.type.charAt(0).toUpperCase() + newAddress.type.slice(1), // Capitalize first letter
-          house_no: newAddress.house_no, // Using landmark as house_no for now
-          street: newAddress.street,
-          city: newAddress.city,
-          state: newAddress.state,
-          postalCode: newAddress.pincode,
-          landmark: newAddress.landmark || "",
-        },
-      };
-      console.log(addressData);
-
-      // Send to backend
-      const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/auth/updateaddress",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(addressData),
-        }
-      );
-
-      const responseData = await response.json();
-      console.log("Response data:", responseData);
-
-      if (response.ok) {
-        // Add the new address to local state with the format we use for display
-        const displayAddress = {
-          type: newAddress.type,
-          house_no: newAddress.house_no,
-          street: newAddress.street,
-          city: newAddress.city,
-          state: newAddress.state,
-          pincode: newAddress.pincode,
-          landmark: newAddress.landmark,
-          address_id: address_id, // Store the ID for future reference
-        };
-
-        setAddresses([...addresses, displayAddress]);
-        const updatedList = [...addresses, displayAddress];
-        setAddresses(updatedList);
-        localStorage.setItem(ADDRESSES_CACHE_KEY, JSON.stringify(updatedList));
-
-        // Reset form
-        setNewAddress({
-          type: "home",
-          house_no: "",
-          street: "",
-          city: "",
-          state: "",
-          pincode: "",
-          landmark: "",
-        });
-        closeModal();
-        alert("Address added successfully");
-      } else {
-        alert(result.message || "Failed to add address");
-      }
-    } catch (error) {
-      console.error("Error adding address:", error);
-      alert("Network error. Please try again.");
-    }
-  };
-
-  const handleDeleteAddress = async (addressId) => {
-    if (window.confirm("Are you sure you want to delete this address?")) {
-      try {
-        // Check if user is available
-        if (!user || (!user.firebaseUid && !user.uid)) {
-          alert("User information is missing. Please log in again.");
-          return;
-        }
-
-        // Get Firebase UID from user object
-        const firebaseUid = user.firebaseUid || user.uid;
-
-        const response = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/user/deleteaddress",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              firebaseUid: firebaseUid,
-              addressId: addressId,
-            }),
-          }
-        );
-
-        const result = await response.json();
-
-        if (response.ok) {
-          // Remove the address from local state using _id
-          const updatedAddresses = addresses.filter(
-            (address) => address._id !== addressId
-          );
-          setAddresses(updatedAddresses);
-          localStorage.setItem(
-            ADDRESSES_CACHE_KEY,
-            JSON.stringify(updatedAddresses)
-          );
-          // If the deleted address was selected, clear the selection
-          if (selectedAddressId === addressId) {
-            setSelectedAddressId(null);
-            localStorage.removeItem("selectedAddressId");
-          }
-          alert("Address deleted successfully");
-        } else {
-          alert(result.message || "Failed to delete address");
-        }
-      } catch (error) {
-        console.error("Error deleting address:", error);
-        alert("Network error. Please try again.");
-      }
-    }
-  };
-
   // Filter addresses based on active type
   const filteredAddresses = addresses.filter((address) => {
     // Convert both to lowercase for case-insensitive comparison
@@ -281,7 +73,7 @@ const SavedAddresses = () => {
         </div>
 
         {/* Loading state */}
-        {loading && (
+        {addressesLoading && (
           <div className="text-center py-8">
             <div className="animate-pulse">Loading addresses...</div>
           </div>
@@ -295,7 +87,7 @@ const SavedAddresses = () => {
         )}
 
         {/* Address Categories */}
-        {!loading && (
+        {!addressesLoading && (
           <div className="mb-6">
             <div className="flex space-x-4 mb-4">
               <button
@@ -323,7 +115,7 @@ const SavedAddresses = () => {
         )}
 
         {/* Address List */}
-        {!loading && !error && (
+        {!addressesLoading && !error && (
           <>
             {filteredAddresses.length === 0 ? (
               <div className="text-center py-8 text-gray-500">

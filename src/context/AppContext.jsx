@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { fetchUserProfile } from "../services/api";
 
 export const AppContext = createContext();
-
+const ADDRESSES_CACHE_KEY = "userAddresses";
+const SELECTED_ADDRESS_KEY = "selectedAddressId";
 const API_URL = "https://hotelbuddhaavenue.vercel.app";
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
-  const [userNumber, setUserNumber] = useState("+91-8400585115");
+  const [userNumber, setUserNumber] = useState("+91-");
   const [phone, setPhone] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [otp, setOtp] = useState("");
@@ -373,6 +374,160 @@ export const AppContextProvider = ({ children }) => {
     return { baseTotal, addonTotal, total: baseTotal + addonTotal };
   };
 
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    localStorage.getItem(SELECTED_ADDRESS_KEY) || null
+  );
+  const [addressesLoading, setAddressesLoading] = useState(false);
+
+  const fetchAddresses = async (forceRefresh = false) => {
+    setAddressesLoading(true);
+    try {
+      if (!forceRefresh) {
+        const cached = localStorage.getItem(ADDRESSES_CACHE_KEY);
+        if (cached) {
+          setAddresses(JSON.parse(cached));
+          setAddressesLoading(false);
+          return;
+        }
+      }
+      if (!user?.firebaseUid && !user?.uid) {
+        setAddresses([]);
+        setAddressesLoading(false);
+        return;
+      }
+      const res = await fetch(`${API_URL}/api/user/getaddresses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firebaseUid: user.firebaseUid || user.uid }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAddresses(data.addresses);
+        localStorage.setItem(
+          ADDRESSES_CACHE_KEY,
+          JSON.stringify(data.addresses)
+        );
+      } else {
+        setAddresses([]);
+      }
+    } catch (e) {
+      setAddresses([]);
+    }
+    setAddressesLoading(false);
+  };
+
+  const handleAddAddress = async (addressObj) => {
+    try {
+      if (
+        !addressObj.house_no ||
+        !addressObj.street ||
+        !addressObj.city ||
+        !addressObj.state ||
+        !addressObj.pincode
+      ) {
+        alert("Please fill in all required fields");
+        return;
+      }
+      if (!user || (!user.firebaseUid && !user.uid)) {
+        alert("User information is missing. Please log in again.");
+        return;
+      }
+      const firebaseUid = user.firebaseUid || user.uid;
+      const addressData = {
+        firebaseUid: firebaseUid,
+        address: {
+          type:
+            addressObj.type.charAt(0).toUpperCase() + addressObj.type.slice(1),
+          house_no: addressObj.house_no,
+          street: addressObj.street,
+          city: addressObj.city,
+          state: addressObj.state,
+          postalCode: addressObj.pincode,
+          landmark: addressObj.landmark || "",
+        },
+      };
+      const response = await fetch(`${API_URL}/api/auth/updateaddress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(addressData),
+      });
+      const responseData = await response.json();
+      if (response.ok && responseData.success) {
+        await fetchAddresses(true);
+        alert("Address added successfully");
+      } else {
+        alert(responseData.message || "Failed to add address");
+      }
+    } catch (error) {
+      console.error("Error adding address:", error);
+      alert("Network error. Please try again.");
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    if (window.confirm("Are you sure you want to delete this address?")) {
+      try {
+        // Check if user is available
+        if (!user || (!user.firebaseUid && !user.uid)) {
+          alert("User information is missing. Please log in again.");
+          return;
+        }
+
+        // Get Firebase UID from user object
+        const firebaseUid = user.firebaseUid || user.uid;
+
+        const response = await fetch(`${API_URL}/api/user/deleteaddress`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firebaseUid,
+            addressId,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          // Remove the address from local state using _id
+          const updatedAddresses = addresses.filter(
+            (address) => address._id !== addressId
+          );
+          setAddresses(updatedAddresses);
+          localStorage.setItem(
+            ADDRESSES_CACHE_KEY,
+            JSON.stringify(updatedAddresses)
+          );
+          // If the deleted address was selected, clear the selection
+          if (selectedAddressId === addressId) {
+            setSelectedAddressId(null);
+            localStorage.removeItem(SELECTED_ADDRESS_KEY);
+          }
+          alert("Address deleted successfully");
+        } else {
+          alert(result.message || "Failed to delete address");
+        }
+      } catch (error) {
+        console.error("Error deleting address:", error);
+        alert("Network error. Please try again.");
+      }
+    }
+  };
+
+  // Keep selected address in sync with localStorage
+  useEffect(() => {
+    if (selectedAddressId) {
+      localStorage.setItem(SELECTED_ADDRESS_KEY, selectedAddressId);
+    }
+  }, [selectedAddressId]);
+
+  // Fetch addresses on user change
+  useEffect(() => {
+    fetchAddresses();
+  }, [user]);
+
   const value = {
     navigate,
     userNumber,
@@ -407,6 +562,13 @@ export const AppContextProvider = ({ children }) => {
     vegModeEnabled,
     toggleVegMode,
     refreshUserProfile,
+    addresses,
+    setSelectedAddressId,
+    selectedAddressId,
+    fetchAddresses,
+    handleAddAddress,
+    handleDeleteAddress,
+    addressesLoading,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

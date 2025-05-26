@@ -1,18 +1,23 @@
 import React, { useState } from "react";
 import CartItem from "../components/Cart/CartItem";
-import { GrNotes } from "react-icons/gr";
-import { FaPlus, FaTimes } from "react-icons/fa";
 import BillDetail from "../components/Cart/BillDetail";
 import AddressPanel from "../components/Cart/AddressPanel";
 import { useAppContext } from "../context/AppContext";
-import { FaTrash } from "react-icons/fa";
+import { FaPlus, FaTrash } from "react-icons/fa";
+import { GrNotes } from "react-icons/gr";
+import { FaTimes } from "react-icons/fa";
 
 const CartPage = () => {
-  const { cart, updateCartItemQuantity, removeFromCart, clearCart } =
-    useAppContext();
+  const {
+    cart,
+    updateCartItemQuantity,
+    removeFromCart,
+    clearCart,
+    addresses,
+    selectedAddressId,
+  } = useAppContext();
 
   const cartArray = Object.values(cart);
-
   const formattedCart = cartArray.map((item) => ({
     ...item,
     price: typeof item.price === "string" ? item.price : `₹${item.price}`,
@@ -22,7 +27,9 @@ const CartPage = () => {
   const [showInstructions, setShowInstructions] = useState(false);
   const [showBillDetails, setShowBillDetails] = useState(false);
   const [showAddressPanel, setShowAddressPanel] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // Find the selected address from context
+  const selectedAddress = addresses.find((a) => a._id === selectedAddressId);
 
   // Update quantity handler
   const handleUpdateQuantity = (itemId, newQuantity) => {
@@ -69,6 +76,7 @@ const CartPage = () => {
 
   return (
     <div className="p-4 pb-32 max-w-xl mx-auto">
+      {/* ...cart clear button and empty cart logic... */}
       {Object.keys(cart).length > 0 && (
         <div className="flex justify-end mb-0">
           <button
@@ -97,9 +105,9 @@ const CartPage = () => {
             <CartItem
               key={item.id}
               item={item}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveItem={handleRemoveItem}
-              onAddMore={handleAddMore}
+              onUpdateQuantity={updateCartItemQuantity}
+              onRemoveItem={removeFromCart}
+              onAddMore={() => window.history.back()}
             />
           ))}
           {/* Add more items button */}
