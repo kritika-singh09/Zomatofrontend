@@ -15,7 +15,14 @@ const Home = () => {
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [currentCustomization, setCurrentCustomization] = useState(null);
   const [customizationQuantity, setCustomizationQuantity] = useState(1);
-  const { cart, addToCartWithQuantity } = useAppContext();
+  const { cart, addToCartWithQuantity, refreshUserProfile } = useAppContext();
+
+  useEffect(() => {
+    console.log("Profile page loaded");
+    if (!localStorage.getItem("userProfile")) {
+      refreshUserProfile(true); // forceRefresh = true
+    }
+  }, []);
 
   const handleFoodClick = (food) => {
     // Check if this item already has customizations in the cart

@@ -59,8 +59,16 @@ export const fetchFoodItems = async () => {
   }
 };
 
-export const fetchUserProfile = async () => {
+export const fetchUserProfile = async (forceRefresh = false) => {
   try {
+    // Try to get cached profile
+    if (!forceRefresh) {
+      const cachedProfile = localStorage.getItem("userProfile");
+      if (cachedProfile) {
+        return { success: true, user: JSON.parse(cachedProfile) };
+      }
+    }
+
     // Get the user data from localStorage
     const userData = JSON.parse(localStorage.getItem("user"));
     const firebaseUid = userData?.uid || userData?.firebaseUid;

@@ -156,6 +156,7 @@ export const AppContextProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userProfile");
     setToken(null);
     setUser(null);
     setCurrentUser(false);
@@ -200,11 +201,9 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = async (forceRefresh = false) => {
     try {
-      console.log("Calling refreshUserProfile, fetching from backend...");
-      const data = await fetchUserProfile();
-
+      const data = await fetchUserProfile(forceRefresh);
       if (data.success && data.user) {
         console.log("User profile fetched successfully:", data.user);
         setUser(data.user);
@@ -215,6 +214,7 @@ export const AppContextProvider = ({ children }) => {
             ...data.user,
           })
         );
+        localStorage.setItem("userProfile", JSON.stringify(data.user));
       } else {
         console.warn("Failed to fetch user profile:", data.error);
       }
@@ -390,7 +390,6 @@ export const AppContextProvider = ({ children }) => {
     cart,
     addToCart,
     removeFromCart,
-    updateCartItemQuantity,
     showCartNotification,
     login,
     verifyOTP,

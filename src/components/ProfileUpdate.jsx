@@ -19,7 +19,7 @@ const getColorForLetter = (letter) => {
 };
 
 const ProfileUpdate = () => {
-  const { user } = useAppContext();
+  const { user, updateUserProfile, refreshUserProfile } = useAppContext();
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -43,7 +43,6 @@ const ProfileUpdate = () => {
   };
 
   // In ProfileUpdate.jsx
-  const { updateUserProfile } = useAppContext();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,6 +80,8 @@ const ProfileUpdate = () => {
         // Update local user data
         const updatedUser = { ...user, ...formData };
         localStorage.setItem("user", JSON.stringify(updatedUser));
+        localStorage.setItem("userProfile", JSON.stringify(updatedUser));
+        refreshUserProfile(true);
         alert("Profile updated successfully");
       } else {
         alert(result.message || "Failed to update profile");

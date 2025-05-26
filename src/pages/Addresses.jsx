@@ -3,6 +3,8 @@ import { useAppContext } from "../context/AppContext";
 import { IoMdAdd } from "react-icons/io";
 import { FaHome, FaBriefcase, FaEdit, FaTrash } from "react-icons/fa";
 
+const ADDRESSES_CACHE_KEY = "userAddresses";
+
 const SavedAddresses = () => {
   const { user } = useAppContext();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -27,9 +29,20 @@ const SavedAddresses = () => {
   });
 
   // Fetch addresses from API
-  const fetchAddresses = async () => {
+  const fetchAddresses = async (forceRefresh = false) => {
     try {
       setLoading(true);
+
+      // Try to get cached addresses
+      if (!forceRefresh) {
+        const cached = localStorage.getItem(ADDRESSES_CACHE_KEY);
+        if (cached) {
+          setAddresses(JSON.parse(cached));
+          setError(null);
+          setLoading(false);
+          return;
+        }
+      }
 
       const response = await fetch(
         "https://hotelbuddhaavenue.vercel.app/api/user/getaddresses",
@@ -51,10 +64,9 @@ const SavedAddresses = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Check if addresses is in the response
         const addressList = data.addresses || [];
-
         setAddresses(addressList);
+        localStorage.setItem(ADDRESSES_CACHE_KEY, JSON.stringify(addressList));
         setError(null);
       } else {
         setError(data.message || "Failed to fetch addresses");
@@ -170,6 +182,9 @@ const SavedAddresses = () => {
         };
 
         setAddresses([...addresses, displayAddress]);
+        const updatedList = [...addresses, displayAddress];
+        setAddresses(updatedList);
+        localStorage.setItem(ADDRESSES_CACHE_KEY, JSON.stringify(updatedList));
 
         // Reset form
         setNewAddress({
@@ -192,7 +207,7 @@ const SavedAddresses = () => {
     }
   };
 
-  const handleDeleteAddress = async (index) => {
+  const handleDeleteAddress = async (addressId) => {
     if (window.confirm("Are you sure you want to delete this address?")) {
       try {
         // Check if user is available
@@ -205,7 +220,7 @@ const SavedAddresses = () => {
         const firebaseUid = user.firebaseUid || user.uid;
 
         const response = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/admin/deleteaddress",
+          "https://hotelbuddhaavenue.vercel.app/api/user/deleteaddress",
           {
             method: "POST",
             headers: {
@@ -213,7 +228,7 @@ const SavedAddresses = () => {
             },
             body: JSON.stringify({
               firebaseUid: firebaseUid,
-              addressIndex: index,
+              addressId: addressId,
             }),
           }
         );
@@ -221,12 +236,17 @@ const SavedAddresses = () => {
         const result = await response.json();
 
         if (response.ok) {
-          // Update local state
-          const updatedAddresses = addresses.filter((_, i) => i !== index);
+          // Remove the address from local state using _id
+          const updatedAddresses = addresses.filter(
+            (address) => address._id !== addressId
+          );
           setAddresses(updatedAddresses);
+          localStorage.setItem(
+            ADDRESSES_CACHE_KEY,
+            JSON.stringify(updatedAddresses)
+          );
           // If the deleted address was selected, clear the selection
-          const deletedAddress = addresses[index];
-          if (deletedAddress && deletedAddress._id === selectedAddressId) {
+          if (selectedAddressId === addressId) {
             setSelectedAddressId(null);
             localStorage.removeItem("selectedAddressId");
           }
@@ -346,7 +366,7 @@ const SavedAddresses = () => {
                           className="text-red-600 p-1"
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent address selection when clicking delete
-                            handleDeleteAddress(index);
+                            handleDeleteAddress(address._id);
                           }}
                         >
                           <FaTrash />
