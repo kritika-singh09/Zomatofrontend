@@ -68,7 +68,7 @@ const CartPage = () => {
   };
 
   return (
-    <div className="p-4 pb-32 w-xl mx-auto">
+    <div className="p-4 pb-32 max-w-xl mx-auto">
       {Object.keys(cart).length > 0 && (
         <div className="flex justify-end mb-0">
           <button

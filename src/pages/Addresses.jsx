@@ -10,6 +10,9 @@ const SavedAddresses = () => {
   const [isClosing, setIsClosing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    localStorage.getItem("selectedAddressId") || null
+  );
 
   const [addresses, setAddresses] = useState([]);
 
@@ -27,10 +30,6 @@ const SavedAddresses = () => {
   const fetchAddresses = async () => {
     try {
       setLoading(true);
-      console.log(
-        "Fetching addresses with firebaseUid:",
-        user?.firebaseUid || user?.uid
-      );
 
       const response = await fetch(
         "https://hotelbuddhaavenue.vercel.app/api/user/getaddresses",
@@ -44,19 +43,17 @@ const SavedAddresses = () => {
           }),
         }
       );
-      console.log("Response status:", response.status);
 
       if (!response.ok) {
         throw new Error("Failed to fetch addresses");
       }
 
       const data = await response.json();
-      console.log("API response data:", data);
 
       if (data.success) {
         // Check if addresses is in the response
         const addressList = data.addresses || [];
-        console.log("Address list:", addressList);
+
         setAddresses(addressList);
         setError(null);
       } else {
@@ -78,6 +75,11 @@ const SavedAddresses = () => {
       setLoading(false);
     }
   }, [user]);
+
+  const handleSelectAddress = (addressId) => {
+    setSelectedAddressId(addressId);
+    localStorage.setItem("selectedAddressId", addressId);
+  };
 
   const closeModal = () => {
     setIsClosing(true);
@@ -203,7 +205,7 @@ const SavedAddresses = () => {
         const firebaseUid = user.firebaseUid || user.uid;
 
         const response = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/user/address/delete",
+          "https://hotelbuddhaavenue.vercel.app/api/admin/deleteaddress",
           {
             method: "POST",
             headers: {
@@ -222,6 +224,12 @@ const SavedAddresses = () => {
           // Update local state
           const updatedAddresses = addresses.filter((_, i) => i !== index);
           setAddresses(updatedAddresses);
+          // If the deleted address was selected, clear the selection
+          const deletedAddress = addresses[index];
+          if (deletedAddress && deletedAddress._id === selectedAddressId) {
+            setSelectedAddressId(null);
+            localStorage.removeItem("selectedAddressId");
+          }
           alert("Address deleted successfully");
         } else {
           alert(result.message || "Failed to delete address");
@@ -234,18 +242,10 @@ const SavedAddresses = () => {
   };
 
   // Filter addresses based on active type
-  // Update the filter function to be case-insensitive
   const filteredAddresses = addresses.filter((address) => {
-    // Debug log
-    console.log("Address:", address);
-
     // Convert both to lowercase for case-insensitive comparison
     return address.type?.toLowerCase() === activeType.toLowerCase();
   });
-
-  // Debug log
-  console.log("All addresses:", addresses);
-  console.log("Filtered addresses:", filteredAddresses);
 
   return (
     <>
@@ -314,7 +314,12 @@ const SavedAddresses = () => {
                 {filteredAddresses.map((address, index) => (
                   <div
                     key={address._id || index}
-                    className="rounded-lg p-4 bg-white shadow-lg/15"
+                    className={`rounded-lg p-4 bg-white shadow-lg/15 cursor-pointer border-2 ${
+                      selectedAddressId === address._id
+                        ? "border-green-500"
+                        : "border-transparent"
+                    }`}
+                    onClick={() => handleSelectAddress(address._id)}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex items-center">
@@ -328,12 +333,21 @@ const SavedAddresses = () => {
                         </span>
                       </div>
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 p-1">
+                        <button
+                          className="text-blue-600 p-1"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent address selection when clicking edit
+                            // Handle edit functionality
+                          }}
+                        >
                           <FaEdit />
                         </button>
                         <button
                           className="text-red-600 p-1"
-                          onClick={() => handleDeleteAddress(index)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent address selection when clicking delete
+                            handleDeleteAddress(index);
+                          }}
                         >
                           <FaTrash />
                         </button>
@@ -348,6 +362,25 @@ const SavedAddresses = () => {
                         {address.postalCode || address.pincode}
                       </p>
                       {address.landmark && <p>Landmark: {address.landmark}</p>}
+
+                      {/* Selected address indicator */}
+                      {selectedAddressId === address._id && (
+                        <div className="mt-2 text-green-600 font-medium flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5 mr-1"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Delivery Address
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
