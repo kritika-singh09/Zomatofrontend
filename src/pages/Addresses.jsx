@@ -8,41 +8,10 @@ const SavedAddresses = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeType, setActiveType] = useState("home");
   const [isClosing, setIsClosing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [addresses, setAddresses] = useState([
-    {
-      type: "home",
-      street: "123 Main Street, Apartment 4B",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400001",
-      landmark: "Near City Hospital",
-    },
-    {
-      type: "work",
-      street: "456 Business Park, Building C",
-      city: "Mumbai",
-      state: "Maharashtra",
-      pincode: "400051",
-      landmark: "Opposite Central Mall",
-    },
-    {
-      type: "home",
-      street: "789 Lake View Road",
-      city: "Pune",
-      state: "Maharashtra",
-      pincode: "411001",
-      landmark: "Behind Green Park",
-    },
-    {
-      type: "work",
-      street: "789 Lake View Road",
-      city: "Pune",
-      state: "Maharashtra",
-      pincode: "411001",
-      landmark: "Behind Green Park",
-    },
-  ]);
+  const [addresses, setAddresses] = useState([]);
 
   const [newAddress, setNewAddress] = useState({
     type: "home",
@@ -53,6 +22,62 @@ const SavedAddresses = () => {
     pincode: "",
     landmark: "",
   });
+
+  // Fetch addresses from API
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      console.log(
+        "Fetching addresses with firebaseUid:",
+        user?.firebaseUid || user?.uid
+      );
+
+      const response = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/user/getaddresses",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firebaseUid: user?.firebaseUid || user?.uid,
+          }),
+        }
+      );
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch addresses");
+      }
+
+      const data = await response.json();
+      console.log("API response data:", data);
+
+      if (data.success) {
+        // Check if addresses is in the response
+        const addressList = data.addresses || [];
+        console.log("Address list:", addressList);
+        setAddresses(addressList);
+        setError(null);
+      } else {
+        setError(data.message || "Failed to fetch addresses");
+      }
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch addresses when component mounts
+  useEffect(() => {
+    if (user?.firebaseUid || user?.uid) {
+      fetchAddresses();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const closeModal = () => {
     setIsClosing(true);
@@ -209,9 +234,18 @@ const SavedAddresses = () => {
   };
 
   // Filter addresses based on active type
-  const filteredAddresses = addresses.filter(
-    (address) => address.type === activeType
-  );
+  // Update the filter function to be case-insensitive
+  const filteredAddresses = addresses.filter((address) => {
+    // Debug log
+    console.log("Address:", address);
+
+    // Convert both to lowercase for case-insensitive comparison
+    return address.type?.toLowerCase() === activeType.toLowerCase();
+  });
+
+  // Debug log
+  console.log("All addresses:", addresses);
+  console.log("Filtered addresses:", filteredAddresses);
 
   return (
     <>
@@ -226,80 +260,100 @@ const SavedAddresses = () => {
           </button>
         </div>
 
-        {/* Address Categories */}
-        <div className="mb-6">
-          <div className="flex space-x-4 mb-4">
-            <button
-              className={`flex-1 py-2 ${
-                activeType === "home"
-                  ? "bg-red-800 text-white"
-                  : "bg-gray-200 text-gray-700"
-              } rounded-md flex items-center justify-center`}
-              onClick={() => setActiveType("home")}
-            >
-              <FaHome className="mr-2" /> Home
-            </button>
-            <button
-              className={`flex-1 py-2 ${
-                activeType === "work"
-                  ? "bg-red-800 text-white"
-                  : "bg-gray-200 text-gray-700"
-              } rounded-md flex items-center justify-center`}
-              onClick={() => setActiveType("work")}
-            >
-              <FaBriefcase className="mr-2" /> Work
-            </button>
+        {/* Loading state */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="animate-pulse">Loading addresses...</div>
           </div>
-        </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+
+        {/* Address Categories */}
+        {!loading && (
+          <div className="mb-6">
+            <div className="flex space-x-4 mb-4">
+              <button
+                className={`flex-1 py-2 ${
+                  activeType === "home"
+                    ? "bg-red-800 text-white"
+                    : "bg-gray-200 text-gray-700"
+                } rounded-md flex items-center justify-center`}
+                onClick={() => setActiveType("home")}
+              >
+                <FaHome className="mr-2" /> Home
+              </button>
+              <button
+                className={`flex-1 py-2 ${
+                  activeType === "work"
+                    ? "bg-red-800 text-white"
+                    : "bg-gray-200 text-gray-700"
+                } rounded-md flex items-center justify-center`}
+                onClick={() => setActiveType("work")}
+              >
+                <FaBriefcase className="mr-2" /> Work
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Address List */}
-        {filteredAddresses.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No {activeType} addresses saved yet
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredAddresses.map((address, index) => (
-              <div key={index} className="rounded-lg p-4 bg-white shadow-lg/15">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center">
-                    {address.type === "home" ? (
-                      <FaHome className="text-red-800 mr-2" />
-                    ) : (
-                      <FaBriefcase className="text-blue-800 mr-2" />
-                    )}
-                    <span className="font-medium capitalize">
-                      {address.type}
-                    </span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="text-blue-600 p-1">
-                      <FaEdit />
-                    </button>
-                    <button
-                      className="text-red-600 p-1"
-                      onClick={() =>
-                        handleDeleteAddress(
-                          addresses.findIndex((a) => a === address)
-                        )
-                      }
-                    >
-                      <FaTrash />
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-2 text-gray-700">
-                  <p>
-                    {address.house_no}, {address.street}
-                  </p>
-                  <p>
-                    {address.city}, {address.state} - {address.pincode}
-                  </p>
-                  {address.landmark && <p>Landmark: {address.landmark}</p>}
-                </div>
+        {!loading && !error && (
+          <>
+            {filteredAddresses.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No {activeType} addresses saved yet
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAddresses.map((address, index) => (
+                  <div
+                    key={address._id || index}
+                    className="rounded-lg p-4 bg-white shadow-lg/15"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center">
+                        {address.type?.toLowerCase() === "home" ? (
+                          <FaHome className="text-red-800 mr-2" />
+                        ) : (
+                          <FaBriefcase className="text-blue-800 mr-2" />
+                        )}
+                        <span className="font-medium capitalize">
+                          {address.type}
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="text-blue-600 p-1">
+                          <FaEdit />
+                        </button>
+                        <button
+                          className="text-red-600 p-1"
+                          onClick={() => handleDeleteAddress(index)}
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-gray-700">
+                      <p>
+                        {address.house_no}, {address.street}
+                      </p>
+                      <p>
+                        {address.city}, {address.state} -{" "}
+                        {address.postalCode || address.pincode}
+                      </p>
+                      {address.landmark && <p>Landmark: {address.landmark}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         {/* Add Address Form */}
