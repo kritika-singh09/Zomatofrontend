@@ -174,10 +174,13 @@ const SavedAddresses = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    const success = await handleAddAddress(newAddress);
-    if (success) {
+    try {
+      await handleAddAddress(newAddress);
+      // Force close the modal regardless of the return value
       setShowAddForm(false);
       setNewAddress(getDefaultAddress());
+    } catch (err) {
+      console.error("Error adding address:", err);
     }
   };
 

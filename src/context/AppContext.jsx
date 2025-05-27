@@ -427,11 +427,11 @@ export const AppContextProvider = ({ children }) => {
         !addressObj.pincode
       ) {
         alert("Please fill in all required fields");
-        return;
+        return false;
       }
       if (!user || (!user.firebaseUid && !user.uid)) {
         alert("User information is missing. Please log in again.");
-        return;
+        return false;
       }
       const firebaseUid = user.firebaseUid || user.uid;
       const addressData = {
@@ -457,13 +457,15 @@ export const AppContextProvider = ({ children }) => {
       const responseData = await response.json();
       if (response.ok && responseData.success) {
         await fetchAddresses(true);
-        alert("Address added successfully");
+        return true;
       } else {
         alert(responseData.message || "Failed to add address");
+        return false;
       }
     } catch (error) {
       console.error("Error adding address:", error);
       alert("Network error. Please try again.");
+      return false;
     }
   };
 
