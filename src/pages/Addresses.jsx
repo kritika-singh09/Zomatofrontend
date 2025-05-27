@@ -208,7 +208,7 @@ const SavedAddresses = () => {
 
   return (
     <>
-      <div className="max-w-md mx-auto p-4">
+      <div className="max-w-xl h-screen mx-auto p-4 bg-bgColor">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-bold">Saved Addresses</h1>
           <button
@@ -219,7 +219,7 @@ const SavedAddresses = () => {
           </button>
           <button
             onClick={() => fetchAddresses(true)}
-            className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-300"
+            className="flex items-center bg-white text-gray-800 px-3 py-2 rounded-md border border-gray-300"
             title="Refresh Addresses"
           >
             Refresh
@@ -248,7 +248,7 @@ const SavedAddresses = () => {
                 className={`flex-1 py-2 ${
                   activeType === "home"
                     ? "bg-red-800 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-white border border-gray-300 text-gray-700"
                 } rounded-md flex items-center justify-center`}
                 onClick={() => setActiveType("home")}
               >
@@ -258,7 +258,7 @@ const SavedAddresses = () => {
                 className={`flex-1 py-2 ${
                   activeType === "work"
                     ? "bg-red-800 text-white"
-                    : "bg-gray-200 text-gray-700"
+                    : "bg-white border border-gray-300 text-gray-700"
                 } rounded-md flex items-center justify-center`}
                 onClick={() => setActiveType("work")}
               >

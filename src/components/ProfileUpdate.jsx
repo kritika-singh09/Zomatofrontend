@@ -93,7 +93,7 @@ const ProfileUpdate = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
+    <div className="max-w-xl h-screen mx-auto p-4 bg-bgColor">
       {/* Profile Image */}
       <div className="flex justify-center mb-6">
         <div className="relative">
@@ -116,7 +116,7 @@ const ProfileUpdate = () => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
+            className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
             required
           />
         </div>
@@ -131,7 +131,7 @@ const ProfileUpdate = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
             required
           />
         </div>
@@ -146,7 +146,7 @@ const ProfileUpdate = () => {
             name="dob"
             value={formData.dob}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
           />
         </div>
 
@@ -160,7 +160,7 @@ const ProfileUpdate = () => {
             name="anniversary"
             value={formData.anniversary}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
+            className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-red-800"
           />
         </div>
 

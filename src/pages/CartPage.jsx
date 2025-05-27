@@ -75,13 +75,13 @@ const CartPage = () => {
   };
 
   return (
-    <div className="p-4 pb-32 max-w-xl mx-auto">
+    <div className="p-4 pb-32 pt-0 max-w-xl h-screen mx-auto bg-bgColor">
       {/* ...cart clear button and empty cart logic... */}
       {Object.keys(cart).length > 0 && (
         <div className="flex justify-end mb-0">
           <button
             onClick={clearCart}
-            className="flex items-center text-red-600 bg-red-50 px-3 py-1 rounded-md hover:bg-red-100"
+            className="flex items-center text-red-600 bg-gray-200 mb-2 px-3 py-1 rounded-md hover:bg-red-100"
           >
             <FaTrash className="mr-2" size={14} />
             Clear Cart
