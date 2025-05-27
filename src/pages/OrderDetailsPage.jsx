@@ -17,31 +17,33 @@ import html2canvas from "html2canvas";
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [orderStatus, setOrderStatus] = useState("pending"); // pending, preparing, delivering, delivered
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Dummy order data (to be replaced with API call)
-  const orderDetails = {
-    id: orderId || "OD123456789",
-    status: orderStatus,
-    date: "May 15, 2023",
-    time: "7:30 PM",
-    items: [
-      { name: "Butter Chicken", quantity: 1, price: 350 },
-      { name: "Garlic Naan", quantity: 2, price: 60 },
-    ],
-    subtotal: 470,
-    deliveryFee: 40,
-    taxes: 25,
-    total: 535,
-    deliveryAddress: "123 Main Street, Apartment 4B, City, State, 110001",
-    paymentMethod: "Cash on Delivery",
-    statusTimeline: {
-      pending: "7:30 PM",
-      preparing: "7:45 PM",
-      delivering: "8:15 PM",
-      delivered: "8:45 PM",
-    },
-  };
+  // const orderDetails = {
+  //   id: orderId || "OD123456789",
+  //   status: orderStatus,
+  //   date: "May 15, 2023",
+  //   time: "7:30 PM",
+  //   items: [
+  //     { name: "Butter Chicken", quantity: 1, price: 350 },
+  //     { name: "Garlic Naan", quantity: 2, price: 60 },
+  //   ],
+  //   subtotal: 470,
+  //   deliveryFee: 40,
+  //   taxes: 25,
+  //   total: 535,
+  //   deliveryAddress: "123 Main Street, Apartment 4B, City, State, 110001",
+  //   paymentMethod: "Cash on Delivery",
+  //   statusTimeline: {
+  //     pending: "7:30 PM",
+  //     preparing: "7:45 PM",
+  //     delivering: "8:15 PM",
+  //     delivered: "8:45 PM",
+  //   },
+  // };
 
   useEffect(() => {
     const style = document.createElement("style");
@@ -94,6 +96,50 @@ const OrderDetailsPage = () => {
     }
   }, [orderStatus]);
 
+  useEffect(() => {
+    const fetchOrderDetails = async () => {
+      if (!orderId) {
+        setError("Order ID is missing");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://hotelbuddhaavenue.vercel.app/api/user/order/${orderId}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setOrderDetails(data.order);
+        } else {
+          setError(data.message || "Failed to fetch order details");
+        }
+      } catch (err) {
+        setError("Error connecting to server. Please try again later.");
+        console.error("Error fetching order details:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderDetails();
+  }, [orderId]);
+
+  // uncomment when real order is placed
+  //   const getOrderStatus = () => {
+  //   if (!orderDetails) return "pending";
+
+  //   switch (orderDetails.order_status) {
+  //     case 1: return "pending";
+  //     case 2: return "preparing";
+  //     case 3: return "delivering";
+  //     case 4: return "delivered";
+  //     case 5: return "cancelled";
+  //     default: return "pending";
+  //   }
+  // };
+
   // Calculate progress percentage based on status
   const getProgressPercentage = () => {
     switch (orderStatus) {
@@ -108,6 +154,27 @@ const OrderDetailsPage = () => {
       default:
         return 0;
     }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Format time for display
+  const formatTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const generatePDF = () => {
@@ -196,6 +263,48 @@ const OrderDetailsPage = () => {
     doc.save(`Order_${orderDetails.id}_Invoice.pdf`);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-pulse">Loading order details...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
+          {error}
+        </div>
+        <button
+          onClick={() => navigate("/orders")}
+          className="bg-gray-200 px-4 py-2 rounded-md"
+        >
+          Back to Orders
+        </button>
+      </div>
+    );
+  }
+
+  if (!orderDetails) {
+    return (
+      <div className="p-4">
+        <div className="bg-yellow-100 text-yellow-700 p-4 rounded-md mb-4">
+          Order not found
+        </div>
+        <button
+          onClick={() => navigate("/orders")}
+          className="bg-gray-200 px-4 py-2 rounded-md"
+        >
+          Back to Orders
+        </button>
+      </div>
+    );
+  }
+
+  const orderStatus = getOrderStatus();
+
   return (
     <div className="bg-gray-100 min-h-screen pb-8">
       {/* Header */}
@@ -203,7 +312,9 @@ const OrderDetailsPage = () => {
         <button onClick={() => navigate("/orders")} className="mr-4">
           <IoArrowBack size={24} />
         </button>
-        <h1 className="text-xl font-semibold">Order #{orderDetails.id}</h1>
+        <h1 className="text-xl font-semibold">
+          Order #{orderDetails._id.slice(-6)}
+        </h1>
       </div>
 
       {/* Order Status Progress Bar */}
@@ -223,23 +334,21 @@ const OrderDetailsPage = () => {
 
           {/* Status points */}
           <div className="flex justify-between relative">
-            {/* Pending - Text above, Icon below */}
+            {/* Pending */}
             <div className="flex flex-col items-center w-16">
-              <div className=" h-10 flex flex-col items-center">
+              <div className="h-10 flex flex-col items-center">
                 <p className="text-xs font-medium">Pending</p>
                 <p className="text-xs text-gray-500">
-                  {orderDetails.statusTimeline.pending}
+                  {formatTime(orderDetails.createdAt)}
                 </p>
               </div>
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center z-10 
-      ${
-        ["pending", "preparing", "delivering", "delivered"].includes(
-          orderStatus
-        )
-          ? "bg-green-500 text-white"
-          : "bg-gray-200"
-      }`}
+                ${
+                  orderStatus !== "pending"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
               >
                 <FaCheck size={12} />
               </div>
@@ -247,48 +356,42 @@ const OrderDetailsPage = () => {
                 <IoTimeOutline
                   size={24}
                   className={`${
-                    [
-                      "pending",
-                      "preparing",
-                      "delivering",
-                      "delivered",
-                    ].includes(orderStatus)
-                      ? "text-green-500" +
-                        (orderStatus === "pending" ? " ticking-animation" : "")
+                    orderStatus === "pending"
+                      ? "text-green-500 ticking-animation"
                       : "text-gray-400"
                   }`}
                 />
               </div>
             </div>
 
-            {/* Preparing - Icon above, Text below */}
+            {/* Preparing */}
             <div className="flex flex-col items-center w-16">
               <div className="h-10 flex items-center">
                 <GiCookingPot
                   size={24}
                   className={`${
-                    ["preparing", "delivering", "delivered"].includes(
-                      orderStatus
-                    )
-                      ? "text-green-500" +
-                        (orderStatus === "preparing"
-                          ? " cooking-animation"
-                          : "")
+                    orderStatus === "preparing"
+                      ? "text-green-500 cooking-animation"
+                      : orderStatus === "delivering" ||
+                        orderStatus === "delivered"
+                      ? "text-green-500"
                       : "text-gray-400"
                   }`}
                 />
               </div>
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center z-10 
-      ${
-        ["preparing", "delivering", "delivered"].includes(orderStatus)
-          ? "bg-green-500 text-white"
-          : "bg-gray-200"
-      }`}
+                ${
+                  orderStatus === "preparing" ||
+                  orderStatus === "delivering" ||
+                  orderStatus === "delivered"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
               >
-                {["preparing", "delivering", "delivered"].includes(
-                  orderStatus
-                ) ? (
+                {orderStatus === "preparing" ||
+                orderStatus === "delivering" ||
+                orderStatus === "delivered" ? (
                   <FaCheck size={12} />
                 ) : (
                   <span className="text-xs">2</span>
@@ -297,63 +400,70 @@ const OrderDetailsPage = () => {
               <div className="h-10 flex flex-col items-center">
                 <p className="text-xs font-medium">Preparing</p>
                 <p className="text-xs text-gray-500">
-                  {orderDetails.statusTimeline.preparing || "--:--"}
+                  {orderStatus === "pending"
+                    ? "--:--"
+                    : formatTime(orderDetails.updatedAt)}
                 </p>
               </div>
             </div>
 
-            {/* Delivering - Text above, Icon below */}
+            {/* Delivering */}
             <div className="flex flex-col items-center w-16">
               <div className="h-10 flex flex-col items-center">
                 <p className="text-xs font-medium">Delivering</p>
                 <p className="text-xs text-gray-500">
-                  {orderDetails.statusTimeline.delivering || "--:--"}
+                  {orderStatus === "pending" || orderStatus === "preparing"
+                    ? "--:--"
+                    : formatTime(orderDetails.updatedAt)}
                 </p>
               </div>
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center z-10 
-      ${
-        ["delivering", "delivered"].includes(orderStatus)
-          ? "bg-green-500 text-white"
-          : "bg-gray-200"
-      }`}
+                ${
+                  orderStatus === "delivering" || orderStatus === "delivered"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
               >
-                {["delivering", "delivered"].includes(orderStatus) ? (
+                {orderStatus === "delivering" || orderStatus === "delivered" ? (
                   <FaCheck size={12} />
                 ) : (
                   <span className="text-xs">3</span>
                 )}
               </div>
               <div className="h-10 flex items-center">
-                <MdOutlineDeliveryDining
+                <FaMotorcycle
                   size={24}
                   className={`${
-                    ["delivering", "delivered"].includes(orderStatus)
-                      ? "text-green-500" +
-                        (orderStatus === "delivering" ? " animate-bounce" : "")
+                    orderStatus === "delivering"
+                      ? "text-green-500 animate-bounce"
+                      : orderStatus === "delivered"
+                      ? "text-green-500"
                       : "text-gray-400"
                   }`}
                 />
               </div>
             </div>
 
-            {/* Delivered - Icon above, Text below */}
+            {/* Delivered */}
             <div className="flex flex-col items-center w-16">
               <div className="h-10 flex items-center">
                 <BsBuildingCheck
                   size={24}
                   className={`${
                     orderStatus === "delivered"
-                      ? "text-green-500 checkmark-animation"
+                      ? "text-green-500"
                       : "text-gray-400"
                   }`}
                 />
               </div>
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center z-10 
-      ${
-        orderStatus === "delivered" ? "bg-green-500 text-white" : "bg-gray-200"
-      }`}
+                ${
+                  orderStatus === "delivered"
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-200"
+                }`}
               >
                 {orderStatus === "delivered" ? (
                   <FaCheck size={12} />
@@ -364,7 +474,9 @@ const OrderDetailsPage = () => {
               <div className="h-10 flex flex-col items-center">
                 <p className="text-xs font-medium">Delivered</p>
                 <p className="text-xs text-gray-500">
-                  {orderDetails.statusTimeline.delivered || "--:--"}
+                  {orderStatus === "delivered"
+                    ? formatTime(orderDetails.updatedAt)
+                    : "--:--"}
                 </p>
               </div>
             </div>
@@ -379,42 +491,17 @@ const OrderDetailsPage = () => {
         <div className="flex justify-between text-sm mb-2">
           <span className="text-gray-600">Order Date</span>
           <span>
-            {orderDetails.date}, {orderDetails.time}
+            {formatDate(orderDetails.createdAt)},{" "}
+            {formatTime(orderDetails.createdAt)}
           </span>
         </div>
 
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600">Payment Method</span>
-          <span>{orderDetails.paymentMethod}</span>
+          <span className="text-gray-600">Payment Status</span>
+          <span>{orderDetails.payment_status}</span>
         </div>
       </div>
-      {/* Delivery Address */}
-      <div className="bg-white p-6 mb-4">
-        <h2 className="text-lg font-semibold mb-4">Delivery Address</h2>
-        <p className="text-sm">{orderDetails.deliveryAddress}</p>
-      </div>
-      {/* Order Items */}
-      <div className="bg-white p-6 mb-4">
-        <h2 className="text-lg font-semibold mb-4">Order Items</h2>
 
-        {orderDetails.items.map((item, index) => (
-          <div
-            key={index}
-            className="flex justify-between py-3 border-b border-gray-100 last:border-0"
-          >
-            <div className="flex">
-              <div className="w-6 h-6 bg-gray-200 rounded-md mr-3"></div>
-              <div>
-                <p className="font-medium">{item.name}</p>
-                <p className="text-sm text-gray-500">
-                  Quantity: {item.quantity}
-                </p>
-              </div>
-            </div>
-            <p className="font-medium">₹{item.price * item.quantity}</p>
-          </div>
-        ))}
-      </div>
       {/* Payment Details */}
       <div className="bg-white p-6" id="bill-details">
         <div className="flex justify-between items-center mb-4">
@@ -428,49 +515,32 @@ const OrderDetailsPage = () => {
           </button>
         </div>
 
-        {/* Restaurant Info - for the invoice */}
-        <div className="mb-4 pb-3 border-b border-gray-100">
-          <h3 className="font-medium mb-1">Buddha Avenue</h3>
-          <p className="text-xs text-gray-500">
-            Invoice #INV-{orderDetails.id}
-          </p>
-          <p className="text-xs text-gray-500">Date: {orderDetails.date}</p>
-        </div>
-
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600">Item Total</span>
-          <span>₹{orderDetails.subtotal}</span>
-        </div>
-
-        <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600">Delivery Fee</span>
-          <span>₹{orderDetails.deliveryFee}</span>
+          <span className="text-gray-600">Amount</span>
+          <span>₹{orderDetails.amount?.toFixed(2)}</span>
         </div>
 
         <div className="flex justify-between text-sm mb-4">
-          <span className="text-gray-600">Taxes</span>
-          <span>₹{orderDetails.taxes}</span>
+          <span className="text-gray-600">GST ({orderDetails.gst}%)</span>
+          <span>
+            ₹{((orderDetails.amount * orderDetails.gst) / 100).toFixed(2)}
+          </span>
         </div>
 
         <div className="flex justify-between font-semibold pt-3 border-t border-gray-100">
           <span>Total</span>
-          <span>₹{orderDetails.total}</span>
+          <span>₹{orderDetails.amount?.toFixed(2)}</span>
         </div>
 
         {/* Payment Status */}
         <div className="mt-4 pt-3 border-t border-gray-100">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Payment Status</span>
-            <span className="text-green-600 font-medium">Paid</span>
+            <span className="text-green-600 font-medium">
+              {orderDetails.payment_status}
+            </span>
           </div>
         </div>
-      </div>
-
-      {/* Help button */}
-      <div className="mt-6 px-6">
-        <button className="w-full py-3 border border-gray-300 rounded-lg font-medium bg-white">
-          Need Help?
-        </button>
       </div>
     </div>
   );

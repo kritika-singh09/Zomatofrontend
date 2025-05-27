@@ -218,7 +218,9 @@ const SavedAddresses = () => {
             <IoMdAdd className="mr-1" /> Add New
           </button>
           <button
-            onClick={() => fetchAddresses(true)}
+            onClick={() => {
+              fetchAddresses(true);
+            }}
             className="flex items-center bg-white text-gray-800 px-3 py-2 rounded-md border border-gray-300"
             title="Refresh Addresses"
           >

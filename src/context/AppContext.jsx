@@ -361,15 +361,18 @@ export const AppContextProvider = ({ children }) => {
           (entry.variation ? parseFloat(entry.variation.price) || 0 : 0)) *
         entry.quantity;
       baseTotal += basePrice;
-      // Sum all addons for all instances
-      entry.addonsList.forEach((addons) => {
-        addonTotal +=
-          addons.reduce((sum, addonName) => {
-            // You may want to map addonName to price here if needed
-            // For now, assume you have a lookup or pass price in the addon object
-            return sum + 0; // Replace 0 with actual price lookup
-          }, 0) || 0;
-      });
+      // Check if addonsList exists before trying to iterate over it
+      if (entry.addonsList && Array.isArray(entry.addonsList)) {
+        entry.addonsList.forEach((addons) => {
+          if (Array.isArray(addons)) {
+            addonTotal +=
+              addons.reduce((sum, addonName) => {
+                // You may want to map addonName to price here if needed
+                return sum + 0; // Replace 0 with actual price lookup
+              }, 0) || 0;
+          }
+        });
+      }
     });
     return { baseTotal, addonTotal, total: baseTotal + addonTotal };
   };
@@ -402,6 +405,7 @@ export const AppContextProvider = ({ children }) => {
         body: JSON.stringify({ firebaseUid: user.firebaseUid || user.uid }),
       });
       const data = await res.json();
+      console.log("Addresses fetched:", data);
       if (data.success) {
         setAddresses(data.addresses);
         localStorage.setItem(
@@ -532,6 +536,94 @@ export const AppContextProvider = ({ children }) => {
     fetchAddresses();
   }, [user]);
 
+  // order placement
+  const placeOrder = async () => {
+    try {
+      if (!user || !user._id) {
+        alert("Please log in to place an order");
+        return { success: false, message: "User not logged in" };
+      }
+
+      if (!selectedAddressId) {
+        alert("Please select a delivery address");
+        return { success: false, message: "No address selected" };
+      }
+
+      const cartItems = Object.values(cart);
+
+      const cartTotals = getCartTotals();
+
+      // Get the actual item IDs from the cart items
+      const item_ids = cartItems.map((item) => item._id).filter(Boolean);
+
+      // is_variation and variation
+      const is_variation = cartItems.some((item) => !!item.variation);
+      const variation = is_variation
+        ? cartItems.map((item) => item.variation || null)
+        : null;
+
+      // is_addon and addon
+      const is_addon = cartItems.some(
+        (item) => Array.isArray(item.addonsList) && item.addonsList.length > 0
+      );
+      const addon = is_addon
+        ? cartItems.map((item) => item.addonsList || [])
+        : [];
+
+      // Prepare order data
+      const orderData = {
+        customer_id: user._id,
+        address_id: selectedAddressId,
+        item_ids,
+        is_variation,
+        variation,
+        is_addon,
+        addon,
+        gst: 18,
+        amount: cartTotals.total,
+        payment_status: "success",
+        payment_data: {},
+        order_status: 1,
+        delivery_partner_id: null,
+        delivery_boy: "Own-Delivery",
+        order_source: "Online",
+        status: "Pending",
+      };
+
+      // Call API to create order
+      const response = await fetch(
+        "https://hotelbuddhaavenue.vercel.app/api/admin/createorder",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(orderData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Clear cart on successful order
+        setCart({});
+        return {
+          success: true,
+          orderId: result.orderId || result._id,
+          message: "Order placed successfully",
+        };
+      } else {
+        return {
+          success: false,
+          message: result.message || "Failed to place order",
+        };
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      return { success: false, message: "Network error. Please try again." };
+    }
+  };
+
   const value = {
     navigate,
     userNumber,
@@ -573,6 +665,7 @@ export const AppContextProvider = ({ children }) => {
     handleAddAddress,
     handleDeleteAddress,
     addressesLoading,
+    placeOrder,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

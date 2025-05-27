@@ -1,80 +1,81 @@
 // src/pages/OrdersPage.jsx
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "../context/AppContext";
+import { Link } from "react-router-dom";
 
 // Dummy data for testing
-const dummyOrders = [
-  {
-    id: "ORD12345",
-    status: "delivered",
-    createdAt: "2023-12-15T14:30:00Z",
-    totalAmount: 450.75,
-    items: [
-      {
-        name: "Butter Chicken",
-        quantity: 1,
-        variationDetails: "Full (500g)",
-        addonDetails: "+ Extra Butter, Roomali Roti",
-      },
-      {
-        name: "Jeera Rice",
-        quantity: 2,
-        variationDetails: "Regular",
-      },
-    ],
-  },
-  {
-    id: "ORD12346",
-    status: "processing",
-    createdAt: "2023-12-18T18:45:00Z",
-    totalAmount: 325.5,
-    items: [
-      {
-        name: "Paneer Tikka",
-        quantity: 1,
-        variationDetails: "Half (250g)",
-        addonDetails: "+ Extra Masala",
-      },
-      {
-        name: "Garlic Naan",
-        quantity: 3,
-      },
-    ],
-  },
-  {
-    id: "ORD12347",
-    status: "cancelled",
-    createdAt: "2023-12-10T12:15:00Z",
-    totalAmount: 550.0,
-    items: [
-      {
-        name: "Chicken Biryani",
-        quantity: 2,
-        variationDetails: "Full (500g)",
-      },
-      {
-        name: "Raita",
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "ORD12348",
-    status: "pending",
-    createdAt: "2023-12-19T09:20:00Z",
-    totalAmount: 275.25,
-    items: [
-      {
-        name: "Masala Dosa",
-        quantity: 2,
-      },
-      {
-        name: "Filter Coffee",
-        quantity: 2,
-      },
-    ],
-  },
-];
+// const dummyOrders = [
+//   {
+//     id: "ORD12345",
+//     status: "delivered",
+//     createdAt: "2023-12-15T14:30:00Z",
+//     totalAmount: 450.75,
+//     items: [
+//       {
+//         name: "Butter Chicken",
+//         quantity: 1,
+//         variationDetails: "Full (500g)",
+//         addonDetails: "+ Extra Butter, Roomali Roti",
+//       },
+//       {
+//         name: "Jeera Rice",
+//         quantity: 2,
+//         variationDetails: "Regular",
+//       },
+//     ],
+//   },
+//   {
+//     id: "ORD12346",
+//     status: "processing",
+//     createdAt: "2023-12-18T18:45:00Z",
+//     totalAmount: 325.5,
+//     items: [
+//       {
+//         name: "Paneer Tikka",
+//         quantity: 1,
+//         variationDetails: "Half (250g)",
+//         addonDetails: "+ Extra Masala",
+//       },
+//       {
+//         name: "Garlic Naan",
+//         quantity: 3,
+//       },
+//     ],
+//   },
+//   {
+//     id: "ORD12347",
+//     status: "cancelled",
+//     createdAt: "2023-12-10T12:15:00Z",
+//     totalAmount: 550.0,
+//     items: [
+//       {
+//         name: "Chicken Biryani",
+//         quantity: 2,
+//         variationDetails: "Full (500g)",
+//       },
+//       {
+//         name: "Raita",
+//         quantity: 1,
+//       },
+//     ],
+//   },
+//   {
+//     id: "ORD12348",
+//     status: "pending",
+//     createdAt: "2023-12-19T09:20:00Z",
+//     totalAmount: 275.25,
+//     items: [
+//       {
+//         name: "Masala Dosa",
+//         quantity: 2,
+//       },
+//       {
+//         name: "Filter Coffee",
+//         quantity: 2,
+//       },
+//     ],
+//   },
+// ];
 
 const OrdersPage = () => {
   const { user } = useAppContext();
@@ -84,22 +85,43 @@ const OrdersPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    // Simulate API call with dummy data
+    // Fetch real orders from API
     const fetchOrders = async () => {
+      if (!user || !user._id) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
-        // Simulate loading delay
-        setTimeout(() => {
-          setOrders(dummyOrders);
-          setLoading(false);
-        }, 1000);
+        const response = await fetch(
+          `https://hotelbuddhaavenue.vercel.app/api/user/orders`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ customer_id: user._id }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.success) {
+          setOrders(data.orders || []);
+        } else {
+          setError(data.message || "Failed to fetch orders");
+        }
       } catch (err) {
-        setError("Error fetching orders");
+        setError("Error connecting to server. Please try again later.");
+        console.error("Error fetching orders:", err);
+      } finally {
         setLoading(false);
       }
     };
 
     fetchOrders();
-  }, []);
+  }, [user]);
 
   // Format date to readable format
   const formatDate = (dateString) => {

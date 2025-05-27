@@ -18,6 +18,7 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
     handleAddAddress,
     handleDeleteAddress,
     addressesLoading,
+    placeOrder,
   } = useAppContext();
 
   const [showAddNewAddress, setShowAddNewAddress] = useState(false);
@@ -57,6 +58,21 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
     if (addrToEdit) {
       setAddressToEdit(addrToEdit);
       setShowAddNewAddress(true);
+    }
+  };
+
+  // Handle order placement when "Deliver to this Address" is clicked
+  const handleDeliverToThisAddress = async () => {
+    if (selectedAddressId) {
+      const result = await placeOrder();
+      if (result.success) {
+        // Optionally, show a toast or redirect to order confirmation
+        // Example: alert(result.message);
+        togglePanel();
+        if (onSelectAddress) onSelectAddress(selectedAddressId);
+      } else {
+        alert(result.message);
+      }
     }
   };
 
@@ -157,8 +173,7 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
           <button
             className="w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-4 hover:bg-green-800"
             onClick={() => {
-              if (selectedAddressId) onSelectAddress(selectedAddressId);
-              togglePanel();
+              handleDeliverToThisAddress();
             }}
           >
             Deliver to this Address

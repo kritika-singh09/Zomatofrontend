@@ -15,8 +15,13 @@ const CartPage = () => {
     clearCart,
     addresses,
     selectedAddressId,
+    setSelectedAddressId,
+    placeOrder,
+    navigate,
   } = useAppContext();
 
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState(null);
   const cartArray = Object.values(cart);
   const formattedCart = cartArray.map((item) => ({
     ...item,
@@ -70,8 +75,37 @@ const CartPage = () => {
 
   // Handle address selection
   const handleSelectAddress = (address) => {
-    setSelectedAddress(address);
-    console.log("Selected address:", address);
+    if (address && address._id) {
+      setSelectedAddressId(address._id);
+      localStorage.setItem("selectedAddressId", address._id);
+      console.log("Selected address:", address);
+    }
+  };
+  // Handle place order
+  const handlePlaceOrder = async () => {
+    if (!selectedAddressId) {
+      setShowAddressPanel(true);
+      return;
+    }
+
+    setIsPlacingOrder(true);
+    setOrderError(null);
+
+    try {
+      const result = await placeOrder();
+
+      if (result.success) {
+        // Show success message and redirect to order details
+        alert(result.message);
+        navigate(`/orders/${result.orderId}`);
+      } else {
+        setOrderError(result.message);
+      }
+    } catch (error) {
+      setOrderError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   return (
@@ -160,6 +194,7 @@ const CartPage = () => {
               </span>
             </div>
           </div>
+
           {/* Address Panel Component */}
           <AddressPanel
             showPanel={showAddressPanel}
