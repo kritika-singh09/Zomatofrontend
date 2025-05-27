@@ -15,12 +15,7 @@ const SavedAddresses = () => {
     addressesLoading,
   } = useAppContext();
 
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [activeType, setActiveType] = useState("home");
-  const [isClosing, setIsClosing] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [newAddress, setNewAddress] = useState({
+  const getDefaultAddress = () => ({
     type: "home",
     house_no: "",
     street: "",
@@ -28,13 +23,162 @@ const SavedAddresses = () => {
     state: "",
     pincode: "",
     landmark: "",
+    lat: 26.7606,
+    lng: 83.3732,
   });
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [activeType, setActiveType] = useState("home");
+  const [isClosing, setIsClosing] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [newAddress, setNewAddress] = useState(getDefaultAddress);
+
   // Fetch addresses from API
+  const fetchAddressFromLatLng = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}&api_key=68356bb1a3afb750007085wdx475b3a`
+      );
+      const data = await response.json();
+      console.log("Reverse geocoding response:", data);
+      if (data && data.address) {
+        setNewAddress((prev) => ({
+          ...prev,
+          house_no: data.address.house_number || "",
+          street: [
+            data.address.road,
+            data.address.neighbourhood,
+            data.address.suburb,
+          ]
+            .filter(Boolean)
+            .join(", "),
+          city:
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            "",
+          state: data.address.state || "",
+          pincode: data.address.postcode || "",
+          landmark:
+            data.address.attraction ||
+            data.address.public_building ||
+            data.address.museum ||
+            "",
+        }));
+      }
+    } catch (err) {
+      console.error("Reverse geocoding failed", err);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    if (showAddForm) {
+      setNewAddress(getDefaultAddress());
+      setTimeout(() => {
+        if (!isMounted) return;
+        if (window.mappls && document.getElementById("map")) {
+          // Remove any previous map instance
+          if (window._mappls_modal_map && window._mappls_modal_map.remove) {
+            window._mappls_modal_map.remove();
+          }
+
+          // Initialize map
+          var map = new window.mappls.Map("map", {
+            center: [26.7606, 83.3732],
+            zoomControl: true,
+            location: true,
+          });
+          window._mappls_modal_map = map;
+
+          // Add draggable marker
+          var marker = new window.mappls.Marker({
+            map: map,
+            position: {
+              lat: 26.7606,
+              lng: 83.3732,
+            },
+            fitbounds: true,
+            popupHtml: "MapmyIndia",
+            draggable: true,
+          });
+          // Helper to show lat/lng
+          function showLatLng(lat, lng) {
+            let divId = document.getElementById("show-result");
+            if (divId) {
+              divId.style.display = "block";
+              divId.innerHTML = `Latitude: ${lat}, Longitude: ${lng}`;
+            }
+            fetchAddressFromLatLng(lat, lng);
+          }
+
+          // On marker drag end
+          marker.addListener("dragend", function () {
+            // Get the new position from the marker itself
+            const pos = marker.getPosition();
+            if (
+              pos &&
+              typeof pos.lat === "number" &&
+              typeof pos.lng === "number"
+            ) {
+              showLatLng(pos.lat, pos.lng);
+            }
+          });
+
+          // On map click, move marker and show lat/lng
+          map.addListener("click", function (e) {
+            let lat, lng;
+            // Prefer e.lat/lng if available, else try e.lngLat
+            if (typeof e.lat === "number" && typeof e.lng === "number") {
+              lat = e.lat;
+              lng = e.lng;
+            } else if (
+              Array.isArray(e.lngLat) &&
+              e.lngLat.length === 2 &&
+              typeof e.lngLat[0] === "number" &&
+              typeof e.lngLat[1] === "number"
+            ) {
+              lng = e.lngLat[0];
+              lat = e.lngLat[1];
+            } else {
+              // Invalid event, do nothing
+              return;
+            }
+            marker.setPosition({ lat, lng });
+            showLatLng(lat, lng);
+          });
+
+          // Show initial position
+          showLatLng(26.7606, 83.3732);
+        }
+      }, 100);
+    }
+    return () => {
+      isMounted = false;
+      // Clean up map instance if needed
+      if (window._mappls_modal_map && window._mappls_modal_map.remove) {
+        window._mappls_modal_map.remove();
+        window._mappls_modal_map = null;
+      }
+      // Hide result div when modal closes
+      const divId = document.getElementById("show-result");
+      if (divId) divId.style.display = "none";
+    };
+  }, [showAddForm]);
 
   const handleSelectAddress = (addressId) => {
     setSelectedAddressId(addressId);
     localStorage.setItem("selectedAddressId", addressId);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    const success = await handleAddAddress(newAddress);
+    if (success) {
+      setShowAddForm(false);
+      setNewAddress(getDefaultAddress());
+    }
   };
 
   const closeModal = () => {
@@ -69,6 +213,13 @@ const SavedAddresses = () => {
             className="flex items-center bg-red-800 text-white px-3 py-2 rounded-md"
           >
             <IoMdAdd className="mr-1" /> Add New
+          </button>
+          <button
+            onClick={() => fetchAddresses(true)}
+            className="flex items-center bg-gray-200 text-gray-800 px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-300"
+            title="Refresh Addresses"
+          >
+            Refresh
           </button>
         </div>
 
@@ -220,7 +371,25 @@ const SavedAddresses = () => {
                   ✕
                 </button>
               </div>
-              <form onSubmit={handleAddAddress} className="space-y-4">
+              <div
+                id="map"
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  width: "100%",
+                  height: "300px",
+                }}
+              ></div>{" "}
+              <div
+                id="show-result"
+                style={{
+                  display: "none",
+                  margin: "8px 0",
+                  color: "#d32f2f",
+                  fontWeight: "bold",
+                }}
+              ></div>
+              <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Address Type

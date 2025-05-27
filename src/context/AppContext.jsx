@@ -445,6 +445,8 @@ export const AppContextProvider = ({ children }) => {
           state: addressObj.state,
           postalCode: addressObj.pincode,
           landmark: addressObj.landmark || "",
+          lat: addressObj.lat,
+          lng: addressObj.lng,
         },
       };
       const response = await fetch(`${API_URL}/api/auth/updateaddress`, {

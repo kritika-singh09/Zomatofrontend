@@ -164,7 +164,7 @@ const OrdersPage = () => {
     return false;
   });
   return (
-    <div className="max-w-xl mx-auto p-4 pb-20">
+    <div className="max-w-xl bg-gray-200 mx-auto p-4 pb-20 pt-0">
       <h1 className="text-2xl font-bold mb-4">My Orders</h1>
 
       {/* Search Bar */}
@@ -175,7 +175,7 @@ const OrdersPage = () => {
             placeholder="Search orders by ID, item, or status..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-800"
+            className="w-full px-4 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-800"
           />
         </div>
       )}
