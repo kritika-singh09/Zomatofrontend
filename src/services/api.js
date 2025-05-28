@@ -11,6 +11,7 @@ export const fetchFoodItems = async () => {
 
     // Map the API response to match the format expected by FoodCard
     const formattedData = data.itemsdata.map((item) => ({
+      _id: item._id,
       id: item.id,
       name: item.name,
       categoryId: item.categoryId,

@@ -237,7 +237,10 @@ export const AppContextProvider = ({ children }) => {
       setCart(updatedCart);
     } else {
       // If item doesn't exist, add it with quantity 1
-      setCart([...cart, { ...item, quantity: 1, id: item.id }]);
+      setCart((prevCart) => ({
+        ...prevCart,
+        [item.id]: { ...item, _id: item._id, quantity: 1 },
+      }));
     }
 
     // Show notification
@@ -257,7 +260,7 @@ export const AppContextProvider = ({ children }) => {
 
     setCart((prevCart) => {
       const prev = { ...prevCart };
-      prev[item.id] = { ...item, quantity };
+      prev[item.id] = { ...item, _id: item._id, quantity };
       return prev;
     });
 
@@ -279,6 +282,7 @@ export const AppContextProvider = ({ children }) => {
       } else {
         prev[id] = {
           ...item,
+          _id: item._id,
           variation,
           quantity: 1,
           addonsList: [addons.map((a) => a.name)],
@@ -537,8 +541,15 @@ export const AppContextProvider = ({ children }) => {
       const cartTotals = getCartTotals();
 
       // Get the actual item IDs from the cart items
-      const item_ids = cartItems.map((item) => item._id).filter(Boolean);
-
+      const itemIds = cartItems.map((item) => item._id).filter(Boolean);
+      // cartItems.forEach((item) => {
+      //   // Make sure we're using the actual item ID from the database
+      //   if (item._id) {
+      //     itemIds.push(item._id);
+      //   } else if (item.id) {
+      //     itemIds.push(item.id);
+      //   }
+      // });
       // is_variation and variation
       const is_variation = cartItems.some((item) => !!item.variation);
       const variation = is_variation
@@ -557,7 +568,7 @@ export const AppContextProvider = ({ children }) => {
       const orderData = {
         customer_id: user._id,
         address_id: selectedAddressId,
-        item_ids,
+        item_ids: itemIds,
         is_variation,
         variation,
         is_addon,

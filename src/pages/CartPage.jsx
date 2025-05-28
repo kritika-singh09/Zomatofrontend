@@ -133,7 +133,10 @@ const CartPage = () => {
           </button>
         </div>
       ) : (
-        <div className="max-h-[70vh] bg-white rounded-lg shadow-md p-4 overflow-y-scroll">
+        <div
+          className="max-h-[70vh] bg-white rounded-lg shadow-md p-4 overflow-y-scroll"
+          style={{ scrollbarWidth: "none" }}
+        >
           {/* Cart items */}
           {formattedCart.map((item) => (
             <CartItem
