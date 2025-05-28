@@ -53,21 +53,21 @@ const Recommendation = ({ food, onFoodClick }) => {
   ];
   const quickFilters = ["Veg Only", "Non-Veg", "Less than ₹200", "Bestseller"];
 
-  useEffect(() => {
-    const runTest = async () => {
-      let total = 0;
-      for (let i = 0; i < 50; i++) {
-        const start = Date.now();
-        await axios.get(
-          "https://hotelbuddhaavenue.vercel.app/api/user/category"
-        );
-        total += Date.now() - start;
-      }
-      console.log("Average Time:", total / 50, "ms");
-    };
+  // useEffect(() => {
+  //   const runTest = async () => {
+  //     let total = 0;
+  //     for (let i = 0; i < 50; i++) {
+  //       const start = Date.now();
+  //       await axios.get(
+  //         "https://hotelbuddhaavenue.vercel.app/api/user/category"
+  //       );
+  //       total += Date.now() - start;
+  //     }
+  //     console.log("Average Time:", total / 50, "ms");
+  //   };
 
-    runTest();
-  }, []);
+  //   runTest();
+  // }, []);
 
   // Fetch data from API and organize by categories
   useEffect(() => {
@@ -294,7 +294,10 @@ const Recommendation = ({ food, onFoodClick }) => {
           </div>
 
           {/* Quick filter chips */}
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+          <div
+            className="flex gap-2 overflow-x-auto"
+            style={{ scrollbarWidth: "none" }}
+          >
             {quickFilters.map((filter) => (
               <button
                 key={filter}

@@ -386,14 +386,6 @@ export const AppContextProvider = ({ children }) => {
   const fetchAddresses = async (forceRefresh = false) => {
     setAddressesLoading(true);
     try {
-      if (!forceRefresh) {
-        const cached = localStorage.getItem(ADDRESSES_CACHE_KEY);
-        if (cached) {
-          setAddresses(JSON.parse(cached));
-          setAddressesLoading(false);
-          return;
-        }
-      }
       if (!user?.firebaseUid && !user?.uid) {
         setAddresses([]);
         setAddressesLoading(false);
@@ -408,10 +400,6 @@ export const AppContextProvider = ({ children }) => {
       console.log("Addresses fetched:", data);
       if (data.success) {
         setAddresses(data.addresses);
-        localStorage.setItem(
-          ADDRESSES_CACHE_KEY,
-          JSON.stringify(data.addresses)
-        );
       } else {
         setAddresses([]);
       }
@@ -459,8 +447,11 @@ export const AppContextProvider = ({ children }) => {
         body: JSON.stringify(addressData),
       });
       const responseData = await response.json();
-      if (response.ok && responseData.success) {
-        await fetchAddresses(true);
+      if (
+        response.ok &&
+        responseData.message?.toLowerCase().includes("added successfully")
+      ) {
+        await fetchAddresses();
         return true;
       } else {
         alert(responseData.message || "Failed to add address");
@@ -499,15 +490,7 @@ export const AppContextProvider = ({ children }) => {
         const result = await response.json();
 
         if (response.ok) {
-          // Remove the address from local state using _id
-          const updatedAddresses = addresses.filter(
-            (address) => address._id !== addressId
-          );
-          setAddresses(updatedAddresses);
-          localStorage.setItem(
-            ADDRESSES_CACHE_KEY,
-            JSON.stringify(updatedAddresses)
-          );
+          await fetchAddresses();
           // If the deleted address was selected, clear the selection
           if (selectedAddressId === addressId) {
             setSelectedAddressId(null);

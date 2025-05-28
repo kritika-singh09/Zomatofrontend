@@ -73,94 +73,99 @@ const SavedAddresses = () => {
   };
 
   useEffect(() => {
+    fetchAddresses(); // Always fetch addresses when this page mounts
+  }, []);
+
+  useEffect(() => {
     let isMounted = true;
+
     if (showAddForm) {
       setNewAddress(getDefaultAddress());
+      // Clear any existing map instance first
+      if (window._mappls_modal_map) {
+        window._mappls_modal_map = null;
+      }
       setTimeout(() => {
         if (!isMounted) return;
-        if (window.mappls && document.getElementById("map")) {
-          // Remove any previous map instance
-          if (window._mappls_modal_map && window._mappls_modal_map.remove) {
-            window._mappls_modal_map.remove();
+
+        const mapContainer = document.getElementById("map");
+        if (!window.mappls || !mapContainer) return;
+
+        // Initialize map
+        const mapInstance = new window.mappls.Map("map", {
+          center: [26.7606, 83.3732],
+          zoomControl: true,
+          location: true,
+        });
+        // Store reference locally instead of on window
+        window._mappls_modal_map = mapInstance;
+
+        // Add draggable marker
+        var marker = new window.mappls.Marker({
+          map: mapInstance,
+          position: {
+            lat: 26.7606,
+            lng: 83.3732,
+          },
+          fitbounds: true,
+          popupHtml: "MapmyIndia",
+          draggable: true,
+        });
+        // Helper to show lat/lng
+        function showLatLng(lat, lng) {
+          let divId = document.getElementById("show-result");
+          if (divId) {
+            divId.style.display = "block";
+            divId.innerHTML = `Latitude: ${lat}, Longitude: ${lng}`;
           }
-
-          // Initialize map
-          var map = new window.mappls.Map("map", {
-            center: [26.7606, 83.3732],
-            zoomControl: true,
-            location: true,
-          });
-          window._mappls_modal_map = map;
-
-          // Add draggable marker
-          var marker = new window.mappls.Marker({
-            map: map,
-            position: {
-              lat: 26.7606,
-              lng: 83.3732,
-            },
-            fitbounds: true,
-            popupHtml: "MapmyIndia",
-            draggable: true,
-          });
-          // Helper to show lat/lng
-          function showLatLng(lat, lng) {
-            let divId = document.getElementById("show-result");
-            if (divId) {
-              divId.style.display = "block";
-              divId.innerHTML = `Latitude: ${lat}, Longitude: ${lng}`;
-            }
-            fetchAddressFromLatLng(lat, lng);
-          }
-
-          // On marker drag end
-          marker.addListener("dragend", function () {
-            // Get the new position from the marker itself
-            const pos = marker.getPosition();
-            if (
-              pos &&
-              typeof pos.lat === "number" &&
-              typeof pos.lng === "number"
-            ) {
-              showLatLng(pos.lat, pos.lng);
-            }
-          });
-
-          // On map click, move marker and show lat/lng
-          map.addListener("click", function (e) {
-            let lat, lng;
-            // Prefer e.lat/lng if available, else try e.lngLat
-            if (typeof e.lat === "number" && typeof e.lng === "number") {
-              lat = e.lat;
-              lng = e.lng;
-            } else if (
-              Array.isArray(e.lngLat) &&
-              e.lngLat.length === 2 &&
-              typeof e.lngLat[0] === "number" &&
-              typeof e.lngLat[1] === "number"
-            ) {
-              lng = e.lngLat[0];
-              lat = e.lngLat[1];
-            } else {
-              // Invalid event, do nothing
-              return;
-            }
-            marker.setPosition({ lat, lng });
-            showLatLng(lat, lng);
-          });
-
-          // Show initial position
-          showLatLng(26.7606, 83.3732);
+          fetchAddressFromLatLng(lat, lng);
         }
+
+        // On marker drag end
+        marker.addListener("dragend", function () {
+          // Get the new position from the marker itself
+          const pos = marker.getPosition();
+          if (
+            pos &&
+            typeof pos.lat === "number" &&
+            typeof pos.lng === "number"
+          ) {
+            showLatLng(pos.lat, pos.lng);
+          }
+        });
+
+        // On map click, move marker and show lat/lng
+        mapInstance.addListener("click", function (e) {
+          let lat, lng;
+          // Prefer e.lat/lng if available, else try e.lngLat
+          if (typeof e.lat === "number" && typeof e.lng === "number") {
+            lat = e.lat;
+            lng = e.lng;
+          } else if (
+            Array.isArray(e.lngLat) &&
+            e.lngLat.length === 2 &&
+            typeof e.lngLat[0] === "number" &&
+            typeof e.lngLat[1] === "number"
+          ) {
+            lng = e.lngLat[0];
+            lat = e.lngLat[1];
+          } else {
+            // Invalid event, do nothing
+            return;
+          }
+          marker.setPosition({ lat, lng });
+          showLatLng(lat, lng);
+        });
+
+        // Show initial position
+        showLatLng(26.7606, 83.3732);
       }, 100);
     }
     return () => {
       isMounted = false;
-      // Clean up map instance if needed
-      if (window._mappls_modal_map && window._mappls_modal_map.remove) {
-        window._mappls_modal_map.remove();
-        window._mappls_modal_map = null;
-      }
+      // Don't try to remove the map, just clear the reference
+      window._mappls_modal_map = null;
+
       // Hide result div when modal closes
       const divId = document.getElementById("show-result");
       if (divId) divId.style.display = "none";
@@ -174,11 +179,17 @@ const SavedAddresses = () => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    // Clear map reference before API call
+    window._mappls_modal_map = null;
+
     try {
-      await handleAddAddress(newAddress);
-      // Force close the modal regardless of the return value
-      setShowAddForm(false);
-      setNewAddress(getDefaultAddress());
+      const success = await handleAddAddress(newAddress);
+      if (success) {
+        console.log("Address added successfully");
+        setShowAddForm(false);
+        setNewAddress(getDefaultAddress());
+        // Optionally, you can call fetchAddresses() here again, but not needed if context does it
+      }
     } catch (err) {
       console.error("Error adding address:", err);
     }
@@ -208,7 +219,10 @@ const SavedAddresses = () => {
 
   return (
     <>
-      <div className="max-w-xl h-screen mx-auto p-4 bg-bgColor">
+      <div
+        className="max-w-xl h-screen overflow-auto mx-auto p-4 bg-bgColor"
+        style={{ scrollbarWidth: "none" }}
+      >
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-xl font-bold">Saved Addresses</h1>
           <button
@@ -216,15 +230,6 @@ const SavedAddresses = () => {
             className="flex items-center bg-red-800 text-white px-3 py-2 rounded-md"
           >
             <IoMdAdd className="mr-1" /> Add New
-          </button>
-          <button
-            onClick={() => {
-              fetchAddresses(true);
-            }}
-            className="flex items-center bg-white text-gray-800 px-3 py-2 rounded-md border border-gray-300"
-            title="Refresh Addresses"
-          >
-            Refresh
           </button>
         </div>
 
