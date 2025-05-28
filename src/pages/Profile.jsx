@@ -6,6 +6,10 @@ import { useAppContext } from "../context/AppContext";
 const Profile = () => {
   const { refreshUserProfile, user, loading } = useAppContext();
 
+  useEffect(() => {
+    refreshUserProfile();
+  }, []);
+
   return (
     <div className="bg-gray-200 max-w-xl mx-auto h-screen">
       {loading ? (

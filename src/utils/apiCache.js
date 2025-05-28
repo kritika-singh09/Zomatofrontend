@@ -1,30 +1,51 @@
 export const fetchWithCache = async (url, cacheKey, expiryMinutes = 60) => {
-  // Check if data exists in cache and is not expired
-  const cachedData = localStorage.getItem(cacheKey);
+  // Check if Cache API is available
+  if ("caches" in window) {
+    try {
+      // Try to get from cache
+      const cache = await caches.open("api-cache");
+      const cachedResponse = await cache.match(url);
 
-  if (cachedData) {
-    const { data, timestamp } = JSON.parse(cachedData);
-    const now = new Date().getTime();
-    const expiryTime = expiryMinutes * 60 * 1000; // Convert minutes to milliseconds
+      if (cachedResponse) {
+        // Check if expired
+        const cachedData = await cachedResponse.json();
+        const now = new Date().getTime();
+        const expiryTime = expiryMinutes * 60 * 1000;
 
-    // If data is not expired, return it
-    if (now - timestamp < expiryTime) {
+        if (cachedData.timestamp && now - cachedData.timestamp < expiryTime) {
+          console.log(`Cache hit for ${url}`);
+          return cachedData.data;
+        }
+      }
+
+      // If no cached data or expired, fetch from API
+      console.log(`Cache miss for ${url}, fetching fresh data`);
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Clone the response and store in cache with timestamp
+      const cacheData = {
+        data,
+        timestamp: new Date().getTime(),
+      };
+
+      const cacheResponse = new Response(JSON.stringify(cacheData), {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      cache.put(url, cacheResponse);
+
       return data;
+    } catch (error) {
+      console.error("Cache error:", error);
+      // If cache fails, just fetch and return data without caching
+      const response = await fetch(url);
+      return await response.json();
     }
   }
 
-  // If no cached data or expired, fetch from API
+  // If Cache API is not available, just fetch and return data
+  console.warn("Cache API not available, fetching without caching");
   const response = await fetch(url);
-  const data = await response.json();
-
-  // Store in cache with timestamp
-  localStorage.setItem(
-    cacheKey,
-    JSON.stringify({
-      data,
-      timestamp: new Date().getTime(),
-    })
-  );
-
-  return data;
+  return await response.json();
 };

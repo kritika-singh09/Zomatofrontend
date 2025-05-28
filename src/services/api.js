@@ -1,23 +1,13 @@
+import { fetchWithCache } from "../utils/apiCache"; // Import your cache util
+
 const API_URL = "https://hotelbuddhaavenue.vercel.app/api/user/items";
 const CACHE_KEY = "foodItemsCache";
-const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hour in milliseconds
+const CACHE_EXPIRY_MINUTES = 24 * 60; // 24 hours in minutes
 
 export const fetchFoodItems = async () => {
   try {
-    const cachedData = localStorage.getItem(CACHE_KEY);
-    if (cachedData) {
-      const { data, timestamp } = JSON.parse(cachedData);
-      const now = new Date().getTime();
-
-      // If cache is still valid, return the cached data
-      if (now - timestamp < CACHE_EXPIRY) {
-        return data;
-      }
-    }
-
-    // If no cache or expired, fetch from API
-    const response = await fetch(`${API_URL}`);
-    const data = await response.json();
+    // fetchWithCache will fetch from API if cache is not available or expired
+    const data = await fetchWithCache(API_URL, CACHE_KEY, CACHE_EXPIRY_MINUTES);
 
     // Map the API response to match the format expected by FoodCard
     const formattedData = data.itemsdata.map((item) => ({
@@ -44,13 +34,13 @@ export const fetchFoodItems = async () => {
     }));
 
     // Store in cache with timestamp
-    localStorage.setItem(
-      CACHE_KEY,
-      JSON.stringify({
-        data: formattedData,
-        timestamp: new Date().getTime(),
-      })
-    );
+    // localStorage.setItem(
+    //   CACHE_KEY,
+    //   JSON.stringify({
+    //     data: formattedData,
+    //     timestamp: new Date().getTime(),
+    //   })
+    // );
 
     return formattedData;
   } catch (error) {
