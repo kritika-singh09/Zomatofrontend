@@ -537,19 +537,19 @@ export const AppContextProvider = ({ children }) => {
       }
 
       const cartItems = Object.values(cart);
-
       const cartTotals = getCartTotals();
+
+      // Calculate delivery fee and GST
+      const deliveryFee = 40; // Fixed delivery fee
+      const gstRate = 5; // GST rate as a number (5%)
+      const gstAmount = cartTotals.total * (gstRate / 100);
+
+      // Calculate final total including GST and delivery fee
+      const finalTotal = cartTotals.total + gstAmount + deliveryFee;
 
       // Get the actual item IDs from the cart items
       const itemIds = cartItems.map((item) => item._id).filter(Boolean);
-      // cartItems.forEach((item) => {
-      //   // Make sure we're using the actual item ID from the database
-      //   if (item._id) {
-      //     itemIds.push(item._id);
-      //   } else if (item.id) {
-      //     itemIds.push(item.id);
-      //   }
-      // });
+
       // is_variation and variation
       const is_variation = cartItems.some((item) => !!item.variation);
       const variation = is_variation
@@ -573,8 +573,8 @@ export const AppContextProvider = ({ children }) => {
         variation,
         is_addon,
         addon,
-        gst: 18,
-        amount: cartTotals.total,
+        gst: gstRate,
+        amount: finalTotal,
         payment_status: "success",
         payment_data: {},
         order_status: 1,
@@ -598,9 +598,11 @@ export const AppContextProvider = ({ children }) => {
 
       const result = await response.json();
 
-      if (result.success) {
+      if (result.success || result.message === "Order placed") {
         // Clear cart on successful order
         setCart({});
+        localStorage.removeItem("cart");
+        navigate(`/order-confirmation/${result.orderId || result._id}`);
         return {
           success: true,
           orderId: result.orderId || result._id,

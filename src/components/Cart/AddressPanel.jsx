@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa";
 import AddNewAddress from "./AddNewAddress";
 import { useAppContext } from "../../context/AppContext";
+import AddNewAddressModal from "../AddNewAddressModal";
 
 const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
   const {
@@ -41,8 +42,11 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
 
   // Handle add
   const handleAdd = async (addressData) => {
-    await handleAddAddress(addressData);
-    setShowAddNewAddress(false);
+    const success = await handleAddAddress(addressData);
+    if (success) {
+      setShowAddNewAddress(false);
+      setAddressToEdit(null);
+    }
   };
 
   // Handle delete
@@ -181,11 +185,11 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
         </div>
       </div>
       {/* Add/Edit Address Panel */}
-      <AddNewAddress
-        showPanel={showAddNewAddress}
-        togglePanel={() => setShowAddNewAddress(!showAddNewAddress)}
-        onAddAddress={handleAdd}
-        addressToEdit={addressToEdit}
+      <AddNewAddressModal
+        showModal={showAddNewAddress}
+        closeModal={() => setShowAddNewAddress(false)}
+        onSubmit={handleAdd}
+        initialAddress={addressToEdit}
       />
     </>
   );
