@@ -8,6 +8,24 @@ const CartButton = () => {
   const { navigate, cart } = useAppContext();
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
+  const [hasCurrentOrder, setHasCurrentOrder] = useState(false);
+
+  // Check if current order exists
+  useEffect(() => {
+    const checkCurrentOrder = () => {
+      const currentOrderElement = document.getElementById("currentOrder");
+      setHasCurrentOrder(!!currentOrderElement);
+    };
+
+    // Check initially
+    checkCurrentOrder();
+
+    // Set up a mutation observer to detect when the current order component is added/removed
+    const observer = new MutationObserver(checkCurrentOrder);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Calculate total items in cart
   const totalItems = Object.values(cart).reduce(
@@ -36,7 +54,9 @@ const CartButton = () => {
   return (
     <button
       onClick={() => navigate("/cart")}
-      className={`fixed bottom-5 right-5 bg-secondary text-white p-3 rounded-xl shadow-lg z-50 flex items-center justify-center transition-all duration-500 ${
+      className={`fixed ${
+        hasCurrentOrder ? "bottom-24" : "bottom-5"
+      } right-5 bg-secondary text-white p-3 rounded-xl shadow-lg z-50 flex items-center justify-center transition-all duration-500 ${
         isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
       }`}
       style={{ width: "60px", height: "60px" }}

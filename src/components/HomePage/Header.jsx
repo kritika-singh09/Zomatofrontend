@@ -10,9 +10,7 @@ import FoodCard from "./FoodCard";
 import { FiLogOut } from "react-icons/fi";
 import { useAppContext } from "../../context/AppContext";
 
-const Header = () => {
-  const [AddressLine1, setAddressLine1] = useState(["Azad Colony "]);
-  const [AddressLine2, setAddressLine2] = useState(["Abc Colony "]);
+const Header = ({ selectedAddress }) => {
   const [toggle, setToggle] = useState(false);
   const { logout, user, navigate } = useAppContext();
   const [showMenu, setShowMenu] = useState(false);
@@ -21,22 +19,43 @@ const Header = () => {
     navigate("/profile");
   };
 
+  // Format address for display
+  // Get the first word of the street for the top line
+  const getAddressLine1 = () => {
+    if (!selectedAddress || !selectedAddress.street) return "Azad Colony";
+
+    // Get the first word of the street
+    const firstWord = selectedAddress.street.split(" ")[0];
+    return firstWord || "Azad Colony";
+  };
+
+  // Get the city name for the bottom line
+  const getAddressLine2 = () => {
+    if (!selectedAddress || !selectedAddress.city) return "Abc Colony";
+    return selectedAddress.city;
+  };
+
   return (
     <>
       <div className="flex justify-between ">
         <div className=" flex items-center m-2 text-xl w-[200px]">
           <div className="flex flex-col">
             <div className="font-bold flex items-center gap-1 text-xl">
-              <FaLocationDot className=" text-red-500" />
-              {AddressLine1}
+              <FaLocationDot className=" text-red-500 h-[18px] mt-[3px]" />
+              {getAddressLine1()}
               <RiArrowDropDownLine className="text-lg " />
             </div>
-            <div className="text-sm ml-2">{AddressLine2}</div>
+            <div
+              className="text-sm ml-2"
+              style={{ transform: "translateY(-3px)" }}
+            >
+              {getAddressLine2()}
+            </div>
           </div>
         </div>
 
         <div className="flex items-center text-2xl">
-          <LuReceiptIndianRupee />
+          {/* <LuReceiptIndianRupee /> */}
           <div className="relative group mx-4">
             <FaUser onClick={handleProfileClick} className="cursor-pointer" />
             <div

@@ -8,6 +8,7 @@ import BottomSheetModal from "../components/BottomSheetModal";
 import VariationPage from "./VariationPage";
 import ItemCustomizationModal from "../components/ItemCustomizationModal";
 import { useAppContext } from "../context/AppContext";
+import CurrentOrder from "../components/CurrentOrder";
 
 const Home = () => {
   const [open, setOpen] = useState(false);
@@ -15,7 +16,14 @@ const Home = () => {
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
   const [currentCustomization, setCurrentCustomization] = useState(null);
   const [customizationQuantity, setCustomizationQuantity] = useState(1);
-  const { cart, addToCartWithQuantity, refreshUserProfile } = useAppContext();
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const {
+    cart,
+    addToCartWithQuantity,
+    refreshUserProfile,
+    addresses,
+    selectedAddressId,
+  } = useAppContext();
 
   useEffect(() => {
     console.log("Profile page loaded");
@@ -23,6 +31,11 @@ const Home = () => {
       refreshUserProfile(true); // forceRefresh = true
     }
   }, []);
+
+  // Find the selected address
+  const selectedAddress = addresses.find(
+    (addr) => addr._id === selectedAddressId
+  );
 
   const handleFoodClick = (food) => {
     // Check if this item already has customizations in the cart
@@ -76,12 +89,21 @@ const Home = () => {
     setOpen(true);
   };
 
+  const handleCategoryClick = (category) => {
+    setSelectedCategory(category);
+  };
+
   return (
     <div className="max-w-xl mx-auto">
-      <Header />
-      <FoodSlider />
+      <Header selectedAddress={selectedAddress} />
+      <FoodSlider onCategoryClick={handleCategoryClick} />
       <FoodItemGrid onFoodClick={handleFoodClick} />
-      <Recommendation onFoodClick={handleFoodClick} />
+      <div id="recommendations-section">
+        <Recommendation
+          onFoodClick={handleFoodClick}
+          selectedCategory={selectedCategory}
+        />
+      </div>
       <CartButton />
       <BottomSheetModal open={open} onClose={() => setOpen(false)}>
         <VariationPage food={selectedFood} onClose={handleClose} />
@@ -96,6 +118,7 @@ const Home = () => {
           quantity={customizationQuantity}
         />
       )}
+      <CurrentOrder />
     </div>
   );
 };

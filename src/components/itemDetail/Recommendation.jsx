@@ -8,20 +8,20 @@ import AddToCartButton from "../AddToCart";
 import axios from "axios";
 
 // Category mapping for display names
-const CATEGORY_NAMES = {
-  1: "Main Course",
-  2: "Lunch Favorites",
-  3: "Dinner Delights",
-  4: "Desserts",
-  5: "Biryani Collection",
-  6: "South Indian",
-  7: "Chinese",
-  8: "Fast Food",
-  9: "Beverages",
-  // Add more categories as needed
-};
+// const CATEGORY_NAMES = {
+//   1: "Main Course",
+//   2: "Lunch Favorites",
+//   3: "Dinner Delights",
+//   4: "Desserts",
+//   5: "Biryani Collection",
+//   6: "South Indian",
+//   7: "Chinese",
+//   8: "Fast Food",
+//   9: "Beverages",
+//   // Add more categories as needed
+// };
 
-const Recommendation = ({ food, onFoodClick }) => {
+const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [originalCategories, setOriginalCategories] = useState([]);
@@ -70,19 +70,36 @@ const Recommendation = ({ food, onFoodClick }) => {
   // }, []);
 
   // Fetch data from API and organize by categories
+  // Fetch data from API and organize by categories
   useEffect(() => {
     const loadItems = async () => {
       try {
         setLoading(true);
-        const items = await fetchFoodItems();
 
-        console.log("Sample item:", items[0]);
+        // Fetch both items and categories
+        const [itemsResponse, categoriesResponse] = await Promise.all([
+          fetchFoodItems(),
+          fetch("https://hotelbuddhaavenue.vercel.app/api/user/category").then(
+            (res) => res.json()
+          ),
+        ]);
+
+        const items = itemsResponse;
+        const categories = categoriesResponse.success
+          ? categoriesResponse.categories
+          : [];
+
+        // Create a mapping of category IDs to names from the API
+        const categoryMapping = {};
+        categories.forEach((category) => {
+          categoryMapping[category.id] = category.name;
+        });
 
         // Group items by category
         const groupedItems = items.reduce((acc, item) => {
-          const categoryId = item.categoryId ? parseInt(item.categoryId) : 0;
-          const categoryName =
-            CATEGORY_NAMES[categoryId] || `Category ${categoryId}`;
+          const categoryId = item.categoryId ? item.categoryId : 0;
+          // Use API category name if available, otherwise use a default name
+          const categoryName = categoryMapping[categoryId] || `Other Items`;
 
           if (!acc[categoryName]) {
             acc[categoryName] = {
@@ -104,10 +121,6 @@ const Recommendation = ({ food, onFoodClick }) => {
         }, {});
 
         const categoriesArray = Object.values(groupedItems);
-        console.log(
-          "Categories created:",
-          categoriesArray.map((c) => c.name)
-        );
         setOriginalCategories(categoriesArray);
         setFilteredCategories(categoriesArray);
         setExpandedAccordion(categoriesArray[0]?.name); // Expand first category by default
@@ -194,6 +207,20 @@ const Recommendation = ({ food, onFoodClick }) => {
 
     setFilteredCategories(newCategories);
   }, [activeFilter, activeQuickFilter, originalCategories, vegModeEnabled]);
+
+  // Effect to handle selected category changes
+  useEffect(() => {
+    if (selectedCategory && filteredCategories.length > 0) {
+      // Find the category with matching name
+      const categoryToExpand = filteredCategories.find(
+        (cat) => cat.name === selectedCategory.name
+      );
+
+      if (categoryToExpand) {
+        setExpandedAccordion(categoryToExpand.name);
+      }
+    }
+  }, [selectedCategory, filteredCategories]);
 
   // Toggle filter dropdown
   const toggleFilter = () => {
