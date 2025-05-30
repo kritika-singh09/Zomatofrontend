@@ -158,6 +158,7 @@ export const AppContextProvider = ({ children }) => {
     localStorage.removeItem("user");
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("userProfile");
+    localStorage.removeItem("cart");
     setToken(null);
     setUser(null);
     setCurrentUser(false);
@@ -564,6 +565,7 @@ export const AppContextProvider = ({ children }) => {
       // Prepare order data
       const orderData = {
         customer_id: user._id,
+        firebaseUid: user.firebaseUid,
         address_id: selectedAddressId,
         item_ids: itemIds,
         is_variation,
