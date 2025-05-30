@@ -88,7 +88,7 @@ const CurrentOrder = () => {
             </div>
           </div>
         </div>
-        <FaChevronRight className="text-gray-400" />
+        <FaChevronRight className="text-white" />
       </div>
     </div>
   );

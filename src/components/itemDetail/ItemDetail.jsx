@@ -1,10 +1,10 @@
 import React from "react";
-import { BsArrowLeftCircle } from "react-icons/bs";
+import BsArrowLeftCircle from "react-icons/bs/BsArrowLeftCircle";
 import { IoPeople } from "react-icons/io5";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { useAppContext } from "../../context/AppContext";
 import { BiSolidLeaf } from "react-icons/bi";
-import { FaStar } from "react-icons/fa";
+import FaStar from "react-icons/fa/FaStar";
 import { MdLocalOffer } from "react-icons/md";
 import { FaMotorcycle } from "react-icons/fa";
 import { useEffect, useState } from "react";
@@ -47,33 +47,35 @@ const ItemHeader = () => {
         </div>
       </div>
       <div className="flex justify-between items-center my-1 px-1">
-         <div className="bg-green-600 text-white rounded-2xl float-right flex items-center px-1 text-xs h-5">
+        <div className="bg-green-600 text-white rounded-2xl float-right flex items-center px-1 text-xs h-5">
           <span>{foodItem.rating}</span>
           <span>
             <FaStar />
           </span>
         </div>
-         {foodItem.veg ? (
-        <div className="bg-green-200 inline-block text-[10px] rounded-xl p-1 opacity-60">
-          <BiSolidLeaf className="inline" />
-          <span>Pure Veg</span>
-        </div>
-      ) : (
-        ""
-      )}
-      
-     </div>
+        {foodItem.veg ? (
+          <div className="bg-green-200 inline-block text-[10px] rounded-xl p-1 opacity-60">
+            <BiSolidLeaf className="inline" />
+            <span>Pure Veg</span>
+          </div>
+        ) : (
+          ""
+        )}
+      </div>
       <div className="flex justify-between">
         <div>
-          <div >
-            <img className="rounded-xl w-full mb-2" src={assets.biryani_image} alt="" />
+          <div>
+            <img
+              className="rounded-xl w-full mb-2"
+              src={assets.biryani_image}
+              alt=""
+            />
           </div>
           <h1 className="font-semibold text-lg">{foodItem.name}</h1>
           <p className="text-xs text-gray-500">{foodItem.category}</p>
           <p className="text-xs text-gray-500">{foodItem.description}</p>
           <p className="text-xs text-gray-500">Delivery Time:35-40mins</p>
         </div>
-       
       </div>
       <div className="text-xs text-gray-500 flex justify-around my-4">
         <span className="bg-gray-200 rounded-2xl px-2 py-0.5">

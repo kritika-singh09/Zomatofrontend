@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import React, { lazy, Suspense } from "react";
 import "./index.css";
 import App from "./App.jsx";
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
@@ -18,9 +19,12 @@ import ProfileUpdate from "./components/ProfileUpdate.jsx";
 import OrdersPage from "./pages/OrdersPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import OrderConfirmationPage from "./pages/OrderConfirmationPage.jsx";
 import OrderDetailsPage from "./pages/OrderDetailsPage.jsx";
 import SavedAddresses from "./pages/Addresses.jsx";
+
+const OrderConfirmationPage = lazy(() =>
+  import("./pages/OrderConfirmationPage.jsx")
+);
 
 // Protected route component
 const ProtectedRoute = ({ children }) => {
@@ -126,7 +130,11 @@ const AppRoutes = () => {
         />
         <Route
           path="/order-confirmation/:orderId?"
-          element={<OrderConfirmationPage />}
+          element={
+            <Suspense fallback={<div>Loading...</div>}>
+              <OrderConfirmationPage />
+            </Suspense>
+          }
         />
         <Route path="/order/:orderId" element={<OrderDetailsPage />} />
         <Route

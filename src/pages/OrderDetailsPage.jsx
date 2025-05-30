@@ -11,8 +11,6 @@ import { FaCheckCircle } from "react-icons/fa";
 import { BsBuildingCheck } from "react-icons/bs";
 import { MdOutlineDeliveryDining } from "react-icons/md";
 import { FaDownload } from "react-icons/fa";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
@@ -177,7 +175,8 @@ const OrderDetailsPage = () => {
     });
   };
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    const { jsPDF } = await import("jspdf");
     // Create a new PDF document
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
