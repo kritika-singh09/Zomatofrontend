@@ -3,6 +3,22 @@ import FoodCard from "./FoodCard";
 import { fetchFoodItems } from "../../services/api";
 import { useAppContext } from "../../context/AppContext";
 
+// Skeleton card
+const SkeletonCard = () => (
+  <div className="bg-white rounded-lg shadow-md overflow-hidden h-64 animate-pulse">
+    <div className="bg-gray-300 h-32 w-full"></div>
+    <div className="p-3">
+      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+      <div className="h-4 bg-gray-300 rounded w-1/4"></div>
+      <div className="flex justify-between items-center mt-4">
+        <div className="h-6 bg-gray-300 rounded w-1/4"></div>
+        <div className="h-8 bg-gray-300 rounded-full w-8"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const FoodItemGrid = ({ onFoodClick }) => {
   const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,8 +68,25 @@ const FoodItemGrid = ({ onFoodClick }) => {
 
       {/* Loading state */}
       {loading && (
-        <div className="flex justify-center py-8">
-          <div className="animate-pulse">Loading dishes...</div>
+        <div className="flex flex-wrap -mx-2">
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
+          <div className="w-1/3 p-2">
+            <SkeletonCard />
+          </div>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { useAppContext } from "../context/AppContext";
 import { IoMdAdd } from "react-icons/io";
 import { FaHome, FaBriefcase, FaEdit, FaTrash } from "react-icons/fa";
 import AddNewAddressModal from "../components/AddNewAddressModal";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 const SavedAddresses = () => {
   const {
@@ -20,10 +21,12 @@ const SavedAddresses = () => {
   const [activeType, setActiveType] = useState("home");
   const [error, setError] = useState(null);
   const [addressToEdit, setAddressToEdit] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    fetchAddresses(); // Always fetch addresses when this page mounts
-  }, []);
+  // useEffect(() => {
+  //   fetchAddresses(); // Always fetch addresses when this page mounts
+  // }, []);
 
   const handleSelectAddress = (addressId) => {
     setSelectedAddressId(addressId);
@@ -32,14 +35,18 @@ const SavedAddresses = () => {
 
   const handleFormSubmit = async (addressData) => {
     try {
+      setIsSaving(true);
       const success = await handleAddAddress(addressData);
       if (success) {
         console.log("Address added successfully");
         setShowAddForm(false);
         setAddressToEdit(null);
+        await fetchAddresses();
       }
     } catch (err) {
       console.error("Error adding address:", err);
+    } finally {
+      setIsSaving(false); // Hide loading overlay
     }
   };
 
@@ -51,6 +58,19 @@ const SavedAddresses = () => {
     }
   };
 
+  const handleDeleteAddressClick = async (id) => {
+    if (window.confirm("Are you sure you want to delete this address?")) {
+      try {
+        setIsDeleting(true); // Show loading overlay
+        await handleDeleteAddress(id);
+      } catch (err) {
+        console.error("Error deleting address:", err);
+      } finally {
+        setIsDeleting(false); // Hide loading overlay
+      }
+    }
+  };
+
   // Filter addresses based on active type
   const filteredAddresses = addresses.filter((address) => {
     return address.type?.toLowerCase() === activeType.toLowerCase();
@@ -58,6 +78,7 @@ const SavedAddresses = () => {
 
   return (
     <>
+      {isDeleting && <LoadingOverlay />}
       <div
         className="max-w-xl h-screen overflow-auto mx-auto p-4 bg-bgColor"
         style={{ scrollbarWidth: "none" }}
@@ -75,45 +96,72 @@ const SavedAddresses = () => {
           </button>
         </div>
 
-        {/* Loading state */}
-        {addressesLoading && (
-          <div className="text-center py-8">
-            <div className="animate-pulse">Loading addresses...</div>
+        {/* Address Categories */}
+        <div className="mb-6">
+          <div className="flex space-x-4 mb-4">
+            <button
+              className={`flex-1 py-2 ${
+                activeType === "home"
+                  ? "bg-red-800 text-white"
+                  : "bg-white border border-gray-300 text-gray-700"
+              } rounded-md flex items-center justify-center`}
+              onClick={() => setActiveType("home")}
+            >
+              <FaHome className="mr-2" /> Home
+            </button>
+            <button
+              className={`flex-1 py-2 ${
+                activeType === "work"
+                  ? "bg-red-800 text-white"
+                  : "bg-white border border-gray-300 text-gray-700"
+              } rounded-md flex items-center justify-center`}
+              onClick={() => setActiveType("work")}
+            >
+              <FaBriefcase className="mr-2" /> Work
+            </button>
           </div>
+        </div>
+
+        {/* Loading state with skeleton cards */}
+        {addressesLoading && (
+          <>
+            <div className="mb-6">
+              <div className="flex space-x-4 mb-4">
+                <div className="flex-1 py-2 bg-gray-200 rounded-md animate-pulse h-10"></div>
+                <div className="flex-1 py-2 bg-gray-200 rounded-md animate-pulse h-10"></div>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((index) => (
+                <div
+                  key={index}
+                  className="rounded-lg p-4 bg-white shadow-lg/15 animate-pulse"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center">
+                      <div className="w-5 h-5 bg-gray-300 rounded-full mr-2"></div>
+                      <div className="w-16 h-5 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <div className="w-6 h-6 bg-gray-300 rounded"></div>
+                      <div className="w-6 h-6 bg-gray-300 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <div className="w-3/4 h-4 bg-gray-300 rounded mb-2"></div>
+                    <div className="w-2/3 h-4 bg-gray-300 rounded mb-2"></div>
+                    <div className="w-1/2 h-4 bg-gray-300 rounded"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Error state */}
         {error && (
           <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
             {error}
-          </div>
-        )}
-
-        {/* Address Categories */}
-        {!addressesLoading && (
-          <div className="mb-6">
-            <div className="flex space-x-4 mb-4">
-              <button
-                className={`flex-1 py-2 ${
-                  activeType === "home"
-                    ? "bg-red-800 text-white"
-                    : "bg-white border border-gray-300 text-gray-700"
-                } rounded-md flex items-center justify-center`}
-                onClick={() => setActiveType("home")}
-              >
-                <FaHome className="mr-2" /> Home
-              </button>
-              <button
-                className={`flex-1 py-2 ${
-                  activeType === "work"
-                    ? "bg-red-800 text-white"
-                    : "bg-white border border-gray-300 text-gray-700"
-                } rounded-md flex items-center justify-center`}
-                onClick={() => setActiveType("work")}
-              >
-                <FaBriefcase className="mr-2" /> Work
-              </button>
-            </div>
           </div>
         )}
 
@@ -161,7 +209,7 @@ const SavedAddresses = () => {
                           className="text-red-600 p-1"
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent address selection when clicking delete
-                            handleDeleteAddress(address._id);
+                            handleDeleteAddressClick(address._id);
                           }}
                         >
                           <FaTrash />
@@ -211,6 +259,7 @@ const SavedAddresses = () => {
         closeModal={() => setShowAddForm(false)}
         onSubmit={handleFormSubmit}
         initialAddress={addressToEdit}
+        isLoading={isSaving}
       />
     </>
   );

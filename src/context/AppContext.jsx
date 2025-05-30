@@ -469,45 +469,42 @@ export const AppContextProvider = ({ children }) => {
   };
 
   const handleDeleteAddress = async (addressId) => {
-    if (window.confirm("Are you sure you want to delete this address?")) {
-      try {
-        // Check if user is available
-        if (!user || (!user.firebaseUid && !user.uid)) {
-          alert("User information is missing. Please log in again.");
-          return;
-        }
-
-        // Get Firebase UID from user object
-        const firebaseUid = user.firebaseUid || user.uid;
-
-        const response = await fetch(`${API_URL}/api/user/deleteaddress`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            firebaseUid,
-            addressId,
-          }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-          await fetchAddresses();
-          // If the deleted address was selected, clear the selection
-          if (selectedAddressId === addressId) {
-            setSelectedAddressId(null);
-            localStorage.removeItem(SELECTED_ADDRESS_KEY);
-          }
-          alert("Address deleted successfully");
-        } else {
-          alert(result.message || "Failed to delete address");
-        }
-      } catch (error) {
-        console.error("Error deleting address:", error);
-        alert("Network error. Please try again.");
+    try {
+      // Check if user is available
+      if (!user || (!user.firebaseUid && !user.uid)) {
+        alert("User information is missing. Please log in again.");
+        return;
       }
+
+      // Get Firebase UID from user object
+      const firebaseUid = user.firebaseUid || user.uid;
+
+      const response = await fetch(`${API_URL}/api/user/deleteaddress`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firebaseUid,
+          addressId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        await fetchAddresses();
+        // If the deleted address was selected, clear the selection
+        if (selectedAddressId === addressId) {
+          setSelectedAddressId(null);
+          localStorage.removeItem(SELECTED_ADDRESS_KEY);
+        }
+      } else {
+        alert(result.message || "Failed to delete address");
+      }
+    } catch (error) {
+      console.error("Error deleting address:", error);
+      alert("Network error. Please try again.");
     }
   };
 

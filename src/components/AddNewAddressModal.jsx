@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
+import LoadingOverlay from "./LoadingOverlay";
 
 const AddNewAddressModal = ({
   showModal,
   closeModal,
   onSubmit,
   initialAddress = null,
+  isLoading = false,
 }) => {
   const getDefaultAddress = () => ({
     type: "home",
@@ -226,6 +228,8 @@ const AddNewAddressModal = ({
         className={`address-modal-content ${isClosing ? "closing" : ""}`}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Add loading overlay inside the modal */}
+        {isLoading && <LoadingOverlay />}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">
             {initialAddress ? "Edit Address" : "Add New Address"}
