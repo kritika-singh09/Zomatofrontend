@@ -6,6 +6,9 @@ import viteCompression from "vite-plugin-compression";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss(), viteCompression()],
+  resolve: {
+    dedupe: ["react", "react-dom"],
+  },
   server: {
     port: 5173,
     host: true, // Add this to listen on all local IPs
