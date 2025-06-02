@@ -56,31 +56,25 @@ const Otp = () => {
       const result = await window.confirmationResult.confirm(combinedOtp);
       console.log("Firebase verification result:", result);
       if (result.user) {
-        // Get Firebase UID
         const firebaseUid = result.user.uid;
         try {
-          // Store user data in localStorage directly after Firebase verification
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              phone,
-              firebaseUid,
-            })
-          );
-          localStorage.setItem("isLoggedIn", "true");
-
-          // Set current user in context
-          setCurrentUser(true);
-
-          toast.success("Login successful!", {
-            onClose: () => {
-              // Only redirect after toast is closed or after 3 seconds
-              setTimeout(() => {
-                window.location.href = "/";
-              }, 3000);
-            },
-            autoClose: 2500, // Toast will show for 2.5 seconds
-          });
+          // Call backend to create user in MongoDB
+          const loginResult = await login(phone, firebaseUid);
+          if (loginResult.success) {
+            // Proceed as before
+            localStorage.setItem(
+              "user",
+              JSON.stringify({
+                phone,
+                firebaseUid,
+              })
+            );
+            localStorage.setItem("isLoggedIn", "true");
+            setCurrentUser(true);
+            // Optionally navigate or show toast
+          } else {
+            toast.error(loginResult.message || "Login failed");
+          }
         } catch (apiError) {
           console.error("API call failed:", apiError);
           toast.error("Server error. Please try again.");

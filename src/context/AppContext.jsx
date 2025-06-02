@@ -96,10 +96,11 @@ export const AppContextProvider = ({ children }) => {
       });
 
       const data = await response.json();
+      console.log("Login API response:", data);
 
       if (response.ok) {
         // Save user data and login status
-        const userData = { phone: phoneNumber, uid: firebaseUid };
+        const userData = data.user;
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("isLoggedIn", "true");
         setUser(userData);
