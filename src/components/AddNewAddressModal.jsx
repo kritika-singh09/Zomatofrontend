@@ -141,7 +141,7 @@ const AddNewAddressModal = ({
       const divId = document.getElementById("show-result");
       if (divId) divId.style.display = "none";
     };
-  }, [showModal, address.lat, address.lng]);
+  }, [showModal]);
 
   const fetchAddressFromLatLng = async (lat, lng) => {
     try {
@@ -252,7 +252,7 @@ const AddNewAddressModal = ({
           }}
         ></div>
 
-        <div
+        {/* <div
           id="show-result"
           style={{
             display: "none",
@@ -260,7 +260,7 @@ const AddNewAddressModal = ({
             color: "#d32f2f",
             fontWeight: "bold",
           }}
-        ></div>
+        ></div> */}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

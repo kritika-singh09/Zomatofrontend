@@ -10,6 +10,7 @@ import {
 import AddNewAddress from "./AddNewAddress";
 import { useAppContext } from "../../context/AppContext";
 import AddNewAddressModal from "../AddNewAddressModal";
+import LoadingOverlay from "../LoadingOverlay";
 
 const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
   const {
@@ -24,6 +25,8 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
 
   const [showAddNewAddress, setShowAddNewAddress] = useState(false);
   const [addressToEdit, setAddressToEdit] = useState(null);
+  const [isAddressLoading, setIsAddressLoading] = useState(false);
+  const [isDeliveryLoading, setIsDeliveryLoading] = useState(false);
 
   // Prevent body scrolling when panel is open
   useEffect(() => {
@@ -68,15 +71,35 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
   // Handle order placement when "Deliver to this Address" is clicked
   const handleDeliverToThisAddress = async () => {
     if (selectedAddressId) {
-      const result = await placeOrder();
-      if (result.success) {
-        // Optionally, show a toast or redirect to order confirmation
-        // Example: alert(result.message);
-        togglePanel();
-        if (onSelectAddress) onSelectAddress(selectedAddressId);
-      } else {
-        alert(result.message);
+      setIsDeliveryLoading(true);
+      try {
+        const result = await placeOrder();
+        if (result.success) {
+          // Optionally, show a toast or redirect to order confirmation
+          // Example: alert(result.message);
+          togglePanel();
+          if (onSelectAddress) onSelectAddress(selectedAddressId);
+        } else {
+          alert(result.message);
+        }
+      } catch (error) {
+        console.error("Error placing order:", error);
+        alert("Failed to place order. Please try again.");
+      } finally {
+        setIsDeliveryLoading(false);
       }
+    }
+  };
+
+  const handleAddressSubmit = async (addressData) => {
+    setIsAddressLoading(true);
+    try {
+      await handleAddAddress(addressData);
+      setShowAddNewAddress(false);
+    } catch (error) {
+      console.error("Error adding address:", error);
+    } finally {
+      setIsAddressLoading(false);
     }
   };
 
@@ -96,7 +119,8 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
           showPanel ? "translate-y-0" : "translate-y-full"
         }`}
       >
-        <div className="bg-white rounded-t-2xl p-5 shadow-lg">
+        <div className="bg-white rounded-t-2xl p-5 shadow-lg relative">
+          {isDeliveryLoading && <LoadingOverlay />}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Delivery Address</h2>
             <button
@@ -175,22 +199,24 @@ const AddressPanel = ({ showPanel, togglePanel, onSelectAddress }) => {
           </div>
           {/* Proceed button */}
           <button
-            className="w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-4 hover:bg-green-800"
-            onClick={() => {
-              handleDeliverToThisAddress();
-            }}
+            className="w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-4 hover:bg-green-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            onClick={handleDeliverToThisAddress}
+            disabled={!selectedAddressId || isDeliveryLoading}
           >
             Deliver to this Address
           </button>
         </div>
       </div>
       {/* Add/Edit Address Panel */}
-      <AddNewAddressModal
-        showModal={showAddNewAddress}
-        closeModal={() => setShowAddNewAddress(false)}
-        onSubmit={handleAdd}
-        initialAddress={addressToEdit}
-      />
+      {showAddNewAddress && (
+        <AddNewAddressModal
+          showModal={showAddNewAddress}
+          closeModal={() => setShowAddNewAddress(false)}
+          onSubmit={handleAddressSubmit}
+          initialAddress={addressToEdit}
+          isLoading={isAddressLoading}
+        />
+      )}
     </>
   );
 };

@@ -18,6 +18,26 @@ const OrderDetailsPage = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [orderStatus, setOrderStatus] = useState("pending");
+
+  const getOrderStatus = () => {
+    if (!orderDetails) return "pending";
+
+    switch (orderDetails.order_status) {
+      case 1:
+        return "pending";
+      case 2:
+        return "preparing";
+      case 3:
+        return "delivering";
+      case 4:
+        return "delivered";
+      case 5:
+        return "cancelled";
+      default:
+        return "pending";
+    }
+  };
 
   // Dummy order data (to be replaced with API call)
   // const orderDetails = {
@@ -80,6 +100,13 @@ const OrderDetailsPage = () => {
     };
   }, []);
 
+  // Update orderStatus when orderDetails changes
+  useEffect(() => {
+    if (orderDetails) {
+      setOrderStatus(getOrderStatus());
+    }
+  }, [orderDetails]);
+
   // For demo purposes, advance the status every few seconds
   useEffect(() => {
     const statusSequence = ["pending", "preparing", "delivering", "delivered"];
@@ -123,20 +150,6 @@ const OrderDetailsPage = () => {
 
     fetchOrderDetails();
   }, [orderId]);
-
-  // uncomment when real order is placed
-  //   const getOrderStatus = () => {
-  //   if (!orderDetails) return "pending";
-
-  //   switch (orderDetails.order_status) {
-  //     case 1: return "pending";
-  //     case 2: return "preparing";
-  //     case 3: return "delivering";
-  //     case 4: return "delivered";
-  //     case 5: return "cancelled";
-  //     default: return "pending";
-  //   }
-  // };
 
   // Calculate progress percentage based on status
   const getProgressPercentage = () => {
@@ -301,8 +314,6 @@ const OrderDetailsPage = () => {
       </div>
     );
   }
-
-  const orderStatus = getOrderStatus();
 
   return (
     <div className="bg-gray-100 min-h-screen pb-8">

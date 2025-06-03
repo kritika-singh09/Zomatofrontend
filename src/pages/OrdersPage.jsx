@@ -95,13 +95,13 @@ const OrdersPage = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://hotelbuddhaavenue.vercel.app/api/user/orders`,
+          `https://hotelbuddhaavenue.vercel.app/api/user/getorders`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ customer_id: user._id }),
+            body: JSON.stringify({ firebaseUid: user.firebaseUid }),
           }
         );
 
@@ -122,6 +122,24 @@ const OrdersPage = () => {
 
     fetchOrders();
   }, [user]);
+
+  // Get status text based on order_status number
+  const getStatusText = (statusCode) => {
+    switch (statusCode) {
+      case 1:
+        return "pending";
+      case 2:
+        return "preparing";
+      case 3:
+        return "delivering";
+      case 4:
+        return "delivered";
+      case 5:
+        return "cancelled";
+      default:
+        return "pending";
+    }
+  };
 
   // Format date to readable format
   const formatDate = (dateString) => {
@@ -245,25 +263,28 @@ const OrdersPage = () => {
       {!loading && !error && orders.length > 0 && (
         <div className="space-y-4">
           {filteredOrders.map((order) => (
-            <div
-              key={order.id}
-              className="bg-white rounded-lg shadow-md p-4 border border-gray-200"
+            <Link
+              to={`/order/${order._id}`}
+              key={order._id}
+              className="block bg-white rounded-lg shadow-md p-4 border border-gray-200"
             >
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">Order #{order.id}</span>
+                <span className="font-medium">
+                  Order #{order._id.slice(-6)}
+                </span>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
-                    order.status === "delivered"
+                    getStatusText(order.order_status) === "delivered"
                       ? "bg-green-100 text-green-800"
-                      : order.status === "processing"
+                      : getStatusText(order.order_status) === "preparing"
                       ? "bg-blue-100 text-blue-800"
-                      : order.status === "cancelled"
+                      : getStatusText(order.order_status) === "cancelled"
                       ? "bg-red-100 text-red-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {order.status?.charAt(0).toUpperCase() +
-                    order.status?.slice(1)}
+                  {getStatusText(order.order_status).charAt(0).toUpperCase() +
+                    getStatusText(order.order_status).slice(1)}
                 </span>
               </div>
 
@@ -271,36 +292,13 @@ const OrdersPage = () => {
                 {formatDate(order.createdAt)}
               </p>
 
-              <div className="border-t border-gray-200 pt-2">
-                {order.items?.map((item, index) => (
-                  <div key={index} className="flex justify-between py-1">
-                    <div>
-                      <span className="text-sm">{item.name}</span>
-                      {item.variationDetails && (
-                        <span className="text-xs text-gray-500 block">
-                          {item.variationDetails}
-                        </span>
-                      )}
-                      {item.addonDetails && (
-                        <span className="text-xs text-gray-500 block">
-                          {item.addonDetails}
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-sm">
-                      <span>x{item.quantity}</span>
-                    </div>
-                  </div>
-                ))}
+              <div className="border-t border-gray-200 pt-2 mt-2">
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>₹{order.amount?.toFixed(2)}</span>
+                </div>
               </div>
-
-              <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between">
-                <span className="font-medium">Total</span>
-                <span className="font-medium">
-                  ₹{order.totalAmount?.toFixed(2)}
-                </span>
-              </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

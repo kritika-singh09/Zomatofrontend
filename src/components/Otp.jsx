@@ -71,7 +71,7 @@ const Otp = () => {
             );
             localStorage.setItem("isLoggedIn", "true");
             setCurrentUser(true);
-            // Optionally navigate or show toast
+            navigate("/", { replace: true });
           } else {
             toast.error(loginResult.message || "Login failed");
           }

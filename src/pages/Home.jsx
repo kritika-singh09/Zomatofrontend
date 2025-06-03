@@ -26,9 +26,12 @@ const Home = () => {
   } = useAppContext();
 
   useEffect(() => {
-    console.log("Profile page loaded");
-    if (!localStorage.getItem("userProfile")) {
-      refreshUserProfile(true); // forceRefresh = true
+    // Only fetch profile if user is logged in but profile isn't loaded yet
+    const userProfile = localStorage.getItem("userProfile");
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+
+    if (isLoggedIn && !userProfile) {
+      refreshUserProfile(true);
     }
   }, []);
 

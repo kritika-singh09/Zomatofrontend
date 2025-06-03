@@ -204,7 +204,12 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
+  const [profileRefreshed, setProfileRefreshed] = useState(false);
+
   const refreshUserProfile = async (forceRefresh = false) => {
+    // Skip if already refreshed and not forcing
+    if (profileRefreshed && !forceRefresh) return;
+
     try {
       const data = await fetchUserProfile(forceRefresh);
       if (data.success && data.user) {
@@ -218,6 +223,7 @@ export const AppContextProvider = ({ children }) => {
           })
         );
         localStorage.setItem("userProfile", JSON.stringify(data.user));
+        setProfileRefreshed(true);
       } else {
         console.warn("Failed to fetch user profile:", data.error);
       }
@@ -583,6 +589,7 @@ export const AppContextProvider = ({ children }) => {
         order_source: "Online",
         status: "Pending",
       };
+      console.log("Order Data:", orderData);
 
       // Call API to create order
       const response = await fetch(
