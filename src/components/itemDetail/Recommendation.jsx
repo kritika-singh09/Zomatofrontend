@@ -59,7 +59,7 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
   //     for (let i = 0; i < 50; i++) {
   //       const start = Date.now();
   //       await axios.get(
-  //         "https://hotelbuddhaavenue.vercel.app/api/user/category"
+  //         "http://localhost:4000/api/user/category"
   //       );
   //       total += Date.now() - start;
   //     }
@@ -79,7 +79,7 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
         // Fetch both items and categories
         const [itemsResponse, categoriesResponse] = await Promise.all([
           fetchFoodItems(),
-          fetch("https://hotelbuddhaavenue.vercel.app/api/user/category").then(
+          fetch("http://localhost:4000/api/user/category").then(
             (res) => res.json()
           ),
         ]);

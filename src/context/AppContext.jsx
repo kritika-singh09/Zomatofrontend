@@ -5,7 +5,7 @@ import { fetchUserProfile } from "../services/api";
 export const AppContext = createContext();
 const ADDRESSES_CACHE_KEY = "userAddresses";
 const SELECTED_ADDRESS_KEY = "selectedAddressId";
-const API_URL = "https://hotelbuddhaavenue.vercel.app";
+const API_URL = "http://localhost:4000";
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -45,28 +45,21 @@ export const AppContextProvider = ({ children }) => {
 
   //Check if user is logged in or not
 
-  // Check if user is logged in on app load and on token/user changes
+  // Check if user is logged in on app load
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-
-      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-      if (token && user) {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const storedUser = localStorage.getItem("user");
+    
+    if (isLoggedIn && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
         setCurrentUser(true);
-      } else if (isLoggedIn) {
-        // If isLoggedIn flag exists but token/user is missing, try to recover
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-            setCurrentUser(true);
-          } catch (e) {
-            console.error("Error parsing stored user:", e);
-          }
-        }
+      } catch (e) {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("user");
       }
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -593,7 +586,7 @@ export const AppContextProvider = ({ children }) => {
 
       // Call API to create order
       const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/admin/createorder",
+        "http://localhost:4000/api/admin/createorder",
         {
           method: "POST",
           headers: {

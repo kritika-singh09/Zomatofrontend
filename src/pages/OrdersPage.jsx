@@ -95,7 +95,7 @@ const OrdersPage = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://hotelbuddhaavenue.vercel.app/api/user/getorders`,
+          `http://localhost:4000/api/user/getorders`,
           {
             method: "POST",
             headers: {

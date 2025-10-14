@@ -21,7 +21,7 @@ const FoodSlider = ({ onCategoryClick }) => {
     const fetchCategories = async () => {
       try {
         const response = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/user/category"
+          "http://localhost:4000/api/user/category"
         );
         const data = await response.json();
 

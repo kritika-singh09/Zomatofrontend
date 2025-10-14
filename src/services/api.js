@@ -1,6 +1,6 @@
 import { fetchWithCache } from "../utils/apiCache"; // Import your cache util
 
-const API_URL = "https://hotelbuddhaavenue.vercel.app/api/user/items";
+const API_URL = "http://localhost:4000/api/user/items";
 const CACHE_KEY = "foodItemsCache";
 const CACHE_EXPIRY_MINUTES = 24 * 60; // 24 hours in minutes
 
@@ -71,7 +71,7 @@ export const fetchUserProfile = async (forceRefresh = false) => {
 
     // Use GET with query param
     const res = await fetch(
-      "https://hotelbuddhaavenue.vercel.app/api/user/data",
+      "http://localhost:4000/api/user/data",
       {
         method: "POST",
         headers: {

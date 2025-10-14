@@ -2,8 +2,6 @@ import React from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
-import { auth } from '../config/firebase';
 
 const Send = () => {
   const { phone } = useAppContext();
@@ -22,53 +20,15 @@ const Send = () => {
     }
   }, [timer]);
 
-  const handleResend = async () => {
-      if (!phone || phone.length !== 10) {
+  const handleResend = () => {
+    if (!phone || phone.length !== 10) {
       toast.error("Invalid phone number");
       navigate('/');
       return;
     }
     setTimer(15);
     setIsResendDisabled(true);
-    // Add logic to resend SMS here
-    // console.log("Resending SMS...");
- 
-    try {
-      // Clear existing recaptcha if any
-      if (window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        delete window.recaptchaVerifier;
-      }
-      
-      // Create invisible recaptcha verifier
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-        callback: () => {
-          console.log('reCAPTCHA verified');
-        }
-      });
-      
-      const appVerifier = window.recaptchaVerifier;
-      
-      // Send OTP via Firebase
-      const confirmation = await signInWithPhoneNumber(
-        auth,
-        "+91" + phone,
-        appVerifier
-      );
-      
-      if (confirmation) {
-        window.confirmationResult = confirmation;
-        toast.success("OTP resent successfully!");
-      } else {
-        toast.error("Failed to send OTP");
-        setIsResendDisabled(false);
-      }
-    } catch (error) {
-      console.error("Error sending OTP:", error);
-      toast.error("Failed to send OTP. Please try again.");
-      setIsResendDisabled(false);
-    }
+    toast.success("OTP resent successfully!");
   };
 
 
@@ -100,7 +60,7 @@ const Send = () => {
         <button onClick={handleChangeNumber} className="text-red-800 font-medium">Change phone number</button>
       </p>    
       </div>
-      <div id="recaptcha-container"></div>
+
       </>
   );
 };

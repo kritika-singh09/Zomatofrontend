@@ -64,7 +64,7 @@ const ProfileUpdate = () => {
 
     try {
       const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/auth/update",
+        "http://localhost:4000/api/auth/update",
         {
           method: "POST",
           headers: {
