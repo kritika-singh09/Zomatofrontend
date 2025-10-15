@@ -84,70 +84,56 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         
         console.log('Map instance created:', mapInstance);
         
-        // Add markers using MapmyIndia's method
-        mapInstance.addListener('load', () => {
-          console.log('Map loaded, adding markers...');
-          
-          // Restaurant marker (red)
-          const restaurantMarker = new mapAPI.Marker();
-          restaurantMarker.setPosition({ lat: restaurantLocation.lat, lng: restaurantLocation.lng });
-          restaurantMarker.setMap(mapInstance);
-          restaurantMarker.setDraggable(false);
-          
-          // Delivery marker (blue, draggable)
-          marker = new mapAPI.Marker();
-          marker.setPosition({ lat: selectedLocation.lat, lng: selectedLocation.lng });
-          marker.setMap(mapInstance);
-          marker.setDraggable(true);
-          
-          console.log('Markers added to map');
-          
-          const updateLocation = (lat, lng) => {
-            setSelectedLocation({ lat, lng });
-            fetchAddressFromMappls(lat, lng);
-          };
-
-          // Add drag listener
-          marker.addListener('dragend', () => {
-            const pos = marker.getPosition();
-            console.log('Marker dragged to:', pos);
-            updateLocation(pos.lat, pos.lng);
-          });
-
-          // Add click listener
-          mapInstance.addListener('click', (e) => {
-            let lat, lng;
-            if (e.lngLat) {
-              lat = e.lngLat[1];
-              lng = e.lngLat[0];
-            } else {
-              lat = e.lat;
-              lng = e.lng;
-            }
-            console.log('Map clicked at:', lat, lng);
-            marker.setPosition({ lat, lng });
-            updateLocation(lat, lng);
-          });
-
-          mapContainer._mapInstance = mapInstance;
-          mapContainer._marker = marker;
-          
-          fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
+        // Create markers immediately after map creation
+        console.log('Creating markers...');
+        
+        // Restaurant marker (red pin)
+        const restaurantMarker = new mapAPI.Marker({
+          map: mapInstance,
+          position: { lat: restaurantLocation.lat, lng: restaurantLocation.lng },
+          draggable: false,
+          fitbounds: true,
+          popupHtml: "🍽️ Restaurant"
         });
-
+        
+        // Delivery marker (blue pin, draggable)
+        marker = new mapAPI.Marker({
+          map: mapInstance,
+          position: { lat: selectedLocation.lat, lng: selectedLocation.lng },
+          draggable: true,
+          fitbounds: true,
+          popupHtml: "📍 Drag to select delivery location"
+        });
+        
+        console.log('Markers created successfully');
+        
         const updateLocation = (lat, lng) => {
+          console.log('Updating location to:', lat, lng);
           setSelectedLocation({ lat, lng });
           fetchAddressFromMappls(lat, lng);
         };
 
+        // Marker drag event
         marker.addListener('dragend', () => {
           const pos = marker.getPosition();
-          updateLocation(pos.lat, pos.lng);
+          if (pos) {
+            updateLocation(pos.lat, pos.lng);
+          }
         });
 
+        // Map click event
         mapInstance.addListener('click', (e) => {
-          const lat = e.lat || e.lngLat[1];
-          const lng = e.lng || e.lngLat[0];
+          let lat, lng;
+          if (e.lngLat && Array.isArray(e.lngLat)) {
+            lng = e.lngLat[0];
+            lat = e.lngLat[1];
+          } else if (e.lat && e.lng) {
+            lat = e.lat;
+            lng = e.lng;
+          } else {
+            return;
+          }
+          
           marker.setPosition({ lat, lng });
           updateLocation(lat, lng);
         });
@@ -155,6 +141,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         mapContainer._mapInstance = mapInstance;
         mapContainer._marker = marker;
         
+        // Get initial address
         fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
       };
       
@@ -162,12 +149,22 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
     }
 
     return () => {
+      // Cleanup map instance
       if (mapInstance) {
         try {
           mapInstance.remove();
+          mapInstance = null;
         } catch (e) {
           console.log('Map cleanup error:', e);
         }
+      }
+      
+      // Clear container references
+      const mapContainer = document.getElementById('address-selector-map');
+      if (mapContainer) {
+        mapContainer._mapInstance = null;
+        mapContainer._marker = null;
+        mapContainer.innerHTML = '';
       }
     };
   }, [isOpen]);
@@ -192,33 +189,65 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
   };
 
   const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      setIsLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setSelectedLocation({ lat: latitude, lng: longitude });
-          
-          // Update map and marker
-          const mapContainer = document.getElementById('address-selector-map');
-          if (mapContainer) {
-            const mapInstance = mapContainer._mapInstance;
-            const marker = mapContainer._marker;
-            if (mapInstance && marker) {
-              mapInstance.setCenter([longitude, latitude]);
-              mapInstance.setZoom(16);
-              marker.setPosition({ lat: latitude, lng: longitude });
-            }
-          }
-          
-          fetchAddressFromMappls(latitude, longitude);
-        },
-        () => {
-          alert('Unable to get current location');
-          setIsLoading(false);
-        }
-      );
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported by this browser');
+      return;
     }
+
+    setIsLoading(true);
+    console.log('Getting current location...');
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        console.log('Got location:', latitude, longitude);
+        
+        setSelectedLocation({ lat: latitude, lng: longitude });
+        
+        // Update map and marker
+        const mapContainer = document.getElementById('address-selector-map');
+        if (mapContainer && mapContainer._mapInstance && mapContainer._marker) {
+          const mapInstance = mapContainer._mapInstance;
+          const marker = mapContainer._marker;
+          
+          // Center map on current location
+          mapInstance.setCenter([longitude, latitude]);
+          mapInstance.setZoom(16);
+          
+          // Move marker to current location
+          marker.setPosition({ lat: latitude, lng: longitude });
+          
+          console.log('Map and marker updated');
+        }
+        
+        fetchAddressFromMappls(latitude, longitude);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let message = 'Unable to get current location';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Location access denied. Please enable location permissions.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = 'Location information unavailable.';
+            break;
+          case error.TIMEOUT:
+            message = 'Location request timed out.';
+            break;
+        }
+        
+        alert(message);
+        setIsLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
   };
 
   const handleConfirm = () => {
