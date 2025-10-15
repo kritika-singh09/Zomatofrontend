@@ -14,8 +14,14 @@ import MapAddressSelector from "../MapAddressSelector";
 
 const Header = ({ selectedAddress, onSearchSelect }) => {
   const [toggle, setToggle] = useState(false);
-  const { logout, user, navigate } = useAppContext();
+  const { logout, user, navigate, vegModeEnabled, toggleVegMode } = useAppContext();
   const [showMenu, setShowMenu] = useState(false);
+  const [showMapSelector, setShowMapSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const handleProfileClick = () => {
     navigate("/profile");
@@ -139,7 +145,7 @@ const Header = ({ selectedAddress, onSearchSelect }) => {
 
   return (
     <>
-      <div className="flex justify-between relative" ref={dropdownRef}>
+      <div className="flex justify-between relative">
         <div className=" flex items-center m-2 text-xl w-[200px]">
           <div className="flex flex-col">
             <div 
