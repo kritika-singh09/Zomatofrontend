@@ -115,7 +115,8 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
           categories = categoriesResponse;
         }
         categories.forEach((category) => {
-          categoryMapping[category._id] = category.name;
+          const cleanName = (category.category || category.name || 'Category').replace(/"/g, '');
+          categoryMapping[category._id] = cleanName;
         });
         
         // If no items, show error
@@ -128,7 +129,7 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
         const groupedItems = items.reduce((acc, item) => {
           const categoryId = item.categoryId ? item.categoryId : 0;
           // Use API category name if available, otherwise use a default name
-          const categoryName = categoryMapping[categoryId] || `Other Items`;
+          const categoryName = categoryMapping[categoryId] || 'Other Items';
 
           if (!acc[categoryName]) {
             acc[categoryName] = {
