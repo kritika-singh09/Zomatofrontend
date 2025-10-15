@@ -92,20 +92,16 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         console.log('Creating markers...');
         
         // Restaurant marker (red pin)
-        const restaurantMarker = new mapAPI.Marker({
-          map: mapInstance,
-          position: { lat: restaurantLocation.lat, lng: restaurantLocation.lng },
-          draggable: false,
-          popupHtml: "🍽️ Restaurant"
-        });
+        const restaurantMarker = new mapAPI.Marker();
+        restaurantMarker.setPosition({ lat: restaurantLocation.lat, lng: restaurantLocation.lng });
+        restaurantMarker.setMap(mapInstance);
+        restaurantMarker.setDraggable(false);
         
         // Delivery marker (blue pin, draggable)
-        marker = new mapAPI.Marker({
-          map: mapInstance,
-          position: { lat: selectedLocation.lat, lng: selectedLocation.lng },
-          draggable: true,
-          popupHtml: "📍 Drag to select delivery location"
-        });
+        marker = new mapAPI.Marker();
+        marker.setPosition({ lat: selectedLocation.lat, lng: selectedLocation.lng });
+        marker.setMap(mapInstance);
+        marker.setDraggable(true);
         
         console.log('Markers created successfully');
         
