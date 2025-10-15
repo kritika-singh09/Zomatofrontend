@@ -81,9 +81,15 @@ const FoodItemGrid = ({ onFoodClick }) => {
 
   // Filter items based on veg mode
   const filteredItems = useMemo(() => {
+    console.log('FoodItemGrid - All foodItems:', foodItems);
+    console.log('FoodItemGrid - vegModeEnabled:', vegModeEnabled);
+    
     if (vegModeEnabled) {
-      return foodItems.filter((item) => item.veg === true);
+      const vegItems = foodItems.filter((item) => item.veg === true);
+      console.log('FoodItemGrid - Veg filtered items:', vegItems);
+      return vegItems;
     }
+    console.log('FoodItemGrid - No veg filter, returning all items:', foodItems);
     return foodItems;
   }, [foodItems, vegModeEnabled]);
 
