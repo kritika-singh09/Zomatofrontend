@@ -1,28 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../config/firebase";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 
 const LoginForm = () => {
-  const { phone, setPhone, isValid, setIsValid } = useAppContext();
+  const { phone, setPhone, isValid, setIsValid, setCurrentUser } = useAppContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // Clean up reCAPTCHA on component unmount
-  useEffect(() => {
-    return () => {
-      if (window.recaptchaVerifier) {
-        try {
-          window.recaptchaVerifier.clear();
-          window.recaptchaVerifier = null;
-        } catch (e) {
-          console.log("Error clearing reCAPTCHA on unmount:", e);
-        }
-      }
-    };
-  }, []);
+
 
   const handleChange = (e) => {
     const value = e.target.value;
@@ -31,72 +17,21 @@ const LoginForm = () => {
     setIsValid(phoneRegex.test(value));
   };
 
-  const setupRecaptcha = () => {
-    // Clean up any existing instances
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch (e) {
-        console.log("Error clearing existing reCAPTCHA:", e);
-      }
-      window.recaptchaVerifier = null;
-    }
 
-    // Clear the container
-    const container = document.getElementById("recaptcha-container");
-    if (container) {
-      container.innerHTML = "";
-    }
-
-    // Create new instance
-    window.recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container",
-      {
-        size: "invisible",
-        callback: () => {},
-        "expired-callback": () => {
-          toast.error("reCAPTCHA expired. Please try again.");
-          setLoading(false);
-        },
-      }
-    );
-  };
 
   const sendOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     if (phone.length === 10 && /^[0-9]+$/.test(phone)) {
-      try {
-        setupRecaptcha();
-
-        const confirmation = await signInWithPhoneNumber(
-          auth,
-          "+91" + phone,
-          window.recaptchaVerifier
-        );
-
-        if (confirmation) {
-          window.confirmationResult = confirmation;
-          toast.success("OTP sent successfully!");
-          navigate("/verification");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-
-        if (error.code === "auth/too-many-requests") {
-          toast.error("Too many requests. Please try again after some time.");
-        } else if (error.message && error.message.includes("reCAPTCHA")) {
-          toast.error(
-            "reCAPTCHA error. Please refresh the page and try again."
-          );
-        } else {
-          toast.error("Failed to send OTP. Try again.");
-        }
-      } finally {
+      setTimeout(() => {
+        localStorage.setItem("user", JSON.stringify({ phone }));
+        localStorage.setItem("isLoggedIn", "true");
+        setCurrentUser(true);
+        toast.success("Login successful!");
+        navigate("/");
         setLoading(false);
-      }
+      }, 500);
     } else {
       toast.error("Please enter a valid 10-digit phone number.");
       setLoading(false);
@@ -139,10 +74,7 @@ const LoginForm = () => {
         >
           {loading ? "Sending..." : "Continue"}
         </button>
-        <div
-          id="recaptcha-container"
-          className="mb-3 flex justify-center mt-3"
-        ></div>
+
       </form>
     </>
   );

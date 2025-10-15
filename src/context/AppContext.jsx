@@ -5,7 +5,7 @@ import { fetchUserProfile } from "../services/api";
 export const AppContext = createContext();
 const ADDRESSES_CACHE_KEY = "userAddresses";
 const SELECTED_ADDRESS_KEY = "selectedAddressId";
-const API_URL = "https://hotelbuddhaavenue.vercel.app";
+const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
@@ -32,11 +32,8 @@ export const AppContextProvider = ({ children }) => {
     rating: 4.5,
   });
 
-  // Initialize cart from localStorage if available
-  const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem("cart");
-    return savedCart ? JSON.parse(savedCart) : {};
-  });
+  // Initialize cart state
+  const [cart, setCart] = useState({});
   const [showCartNotification, setShowCartNotification] = useState(false);
 
   // Use refs to prevent infinite loops
@@ -45,34 +42,28 @@ export const AppContextProvider = ({ children }) => {
 
   //Check if user is logged in or not
 
-  // Check if user is logged in on app load and on token/user changes
+  // Check if user is logged in on app load
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-
-      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-      if (token && user) {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const storedUser = localStorage.getItem("user");
+    
+    if (isLoggedIn && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
         setCurrentUser(true);
-      } else if (isLoggedIn) {
-        // If isLoggedIn flag exists but token/user is missing, try to recover
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          try {
-            setUser(JSON.parse(storedUser));
-            setCurrentUser(true);
-          } catch (e) {
-            console.error("Error parsing stored user:", e);
-          }
-        }
+      } catch (e) {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("user");
       }
     }
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Fetch cart on user login
   useEffect(() => {
-    const cartJSON = JSON.stringify(cart);
-    localStorage.setItem("cart", cartJSON);
-  }, [cart]); // Only run when cart changes
+    if (currentUser && (user?._id || user?.id)) {
+      fetchCart();
+    }
+  }, [currentUser, user]);
 
   // Generate unique ID for base item + variation
   const getBaseVariationId = (item, variation) => {
@@ -83,32 +74,17 @@ export const AppContextProvider = ({ children }) => {
     return `${base}-${variationPart}`;
   };
 
-  // Login function
-  const login = async (phoneNumber, firebaseUid) => {
+  // Login function - simplified for new backend
+  const login = async (phoneNumber) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone: phoneNumber, firebaseUid }),
-      });
-
-      const data = await response.json();
-      console.log("Login API response:", data);
-
-      if (response.ok) {
-        // Save user data and login status
-        const userData = data.user;
-        localStorage.setItem("user", JSON.stringify(userData));
-        localStorage.setItem("isLoggedIn", "true");
-        setUser(userData);
-        setCurrentUser(true);
-        return { success: true, message: data.message };
-      } else {
-        return { success: false, message: data.message || "Login failed" };
-      }
+      // Mock login for now
+      const userData = { phone: phoneNumber, name: "User" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("isLoggedIn", "true");
+      setUser(userData);
+      setCurrentUser(true);
+      return { success: true, message: "Login successful" };
     } catch (error) {
       console.error("Login error:", error);
       return { success: false, message: "Network error. Please try again." };
@@ -117,34 +93,17 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Verify OTP function
+  // Verify OTP function - simplified
   const verifyOTP = async (phoneNumber, otpCode) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/verify`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ phone: phoneNumber, otp: otpCode }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Save token and user data
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        setToken(data.token);
-        setUser(data.user);
-        setCurrentUser(true);
-        return { success: true };
-      } else {
-        return {
-          success: false,
-          message: data.message || "OTP verification failed",
-        };
-      }
+      // Mock verification
+      const userData = { phone: phoneNumber, name: "User" };
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("isLoggedIn", "true");
+      setUser(userData);
+      setCurrentUser(true);
+      return { success: true };
     } catch (error) {
       console.error("OTP verification error:", error);
       return { success: false, message: "Network error. Please try again." };
@@ -166,36 +125,18 @@ export const AppContextProvider = ({ children }) => {
     navigate("/login");
   };
 
-  // Update user profile function
+  // Update user profile function - simplified
   const updateUserProfile = async (userData) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/update`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Update local user data
-        const updatedUser = { ...user, ...userData };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-        return {
-          success: true,
-          message: data.message || "Profile updated successfully",
-        };
-      } else {
-        return {
-          success: false,
-          message: data.message || "Failed to update profile",
-        };
-      }
+      // Update local user data
+      const updatedUser = { ...user, ...userData };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      return {
+        success: true,
+        message: "Profile updated successfully",
+      };
     } catch (error) {
       console.error("Profile update error:", error);
       return { success: false, message: "Network error. Please try again." };
@@ -232,50 +173,84 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Add item to cart
-  const addToCart = (item) => {
-    // Check if item already exists in cart
-    const existingItemIndex = cart.findIndex(
-      (cartItem) => cartItem.id === item.id
-    );
-    if (existingItemIndex !== -1) {
-      // If item exists, update quantity
-      const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity = quantity;
-      setCart(updatedCart);
-    } else {
-      // If item doesn't exist, add it with quantity 1
-      setCart((prevCart) => ({
-        ...prevCart,
-        [item.id]: { ...item, _id: item._id, quantity: 1 },
-      }));
+  // Fetch cart from API
+  const fetchCart = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/cart/get`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user?._id || user?.id })
+      });
+      const data = await response.json();
+      if (data.success && data.cartItems) {
+        const cartObj = {};
+        data.cartItems.forEach(item => {
+          cartObj[item.itemId] = item;
+        });
+        setCart(cartObj);
+      } else {
+        setCart({});
+      }
+    } catch (error) {
+      console.error("Error fetching cart:", error);
     }
-
-    // Show notification
-    setShowCartNotification(true);
-
-    // Hide notification after 3 seconds
-    setTimeout(() => {
-      setShowCartNotification(false);
-    }, 3000);
   };
 
-  const addToCartWithQuantity = (item, quantity) => {
-    if (!item || !item.id) {
-      console.error("Invalid item or missing ID:", item);
+  // Add item to cart
+  const addToCart = async (item, variation = null, addons = []) => {
+    if (!user?._id && !user?.id) {
+      console.error("User ID not available");
       return;
     }
+    try {
+      const response = await fetch(`${API_URL}/api/cart/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id || user.id,
+          itemId: item._id,
+          quantity: 1,
+          variation: variation?._id || null,
+          addons: addons.map(addon => addon._id || addon)
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchCart();
+        setShowCartNotification(true);
+        setTimeout(() => setShowCartNotification(false), 3000);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
+  };
 
-    setCart((prevCart) => {
-      const prev = { ...prevCart };
-      prev[item.id] = { ...item, _id: item._id, quantity };
-      return prev;
-    });
-
-    setShowCartNotification(true);
-    setTimeout(() => {
-      setShowCartNotification(false);
-    }, 3000);
+  const addToCartWithQuantity = async (item, quantity, variation = null, addons = []) => {
+    if (!user?._id && !user?.id) {
+      console.error("User ID not available");
+      return;
+    }
+    try {
+      const response = await fetch(`${API_URL}/api/cart/add`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id || user.id,
+          itemId: item._id,
+          quantity: quantity,
+          variation: variation?._id || null,
+          addons: addons.map(addon => addon._id || addon)
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchCart();
+        setShowCartNotification(true);
+        setTimeout(() => setShowCartNotification(false), 3000);
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+    }
   };
 
   // Add to cart
@@ -316,44 +291,64 @@ export const AppContextProvider = ({ children }) => {
   };
 
   // Remove item from cart
-  const removeFromCart = (itemId) => {
-    setCart((prevCart) => {
-      const newCart = { ...prevCart };
-      delete newCart[itemId];
-      return newCart;
-    });
-  };
-
-  // Empty Cart
-  const clearCart = () => {
-    if (window.confirm("Delete all the items of the cart?")) {
-      setCart({});
+  const removeFromCart = async (itemId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/cart/remove`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?._id || user?.id,
+          itemId: itemId
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchCart();
+      }
+    } catch (error) {
+      console.error("Error removing from cart:", error);
     }
   };
 
-  // Update quantity (for all instances)
-  const updateCartItemQuantity = (id, newQuantity, newAddons = []) => {
-    setCart((prevCart) => {
-      const prev = { ...prevCart };
-      if (!prev[id]) return prev;
-
-      // If increasing, add a new addons set (empty or from newAddons)
-      if (newQuantity > prev[id].quantity) {
-        prev[id].quantity = newQuantity;
-        prev[id].addonsList.push(newAddons.length ? newAddons : []);
-      }
-      // If decreasing, remove the last addons set
-      else if (newQuantity < prev[id].quantity) {
-        prev[id].quantity = newQuantity;
-        prev[id].addonsList.pop();
-        // If quantity is now 0, remove the item
-        if (prev[id].quantity <= 0) {
-          delete prev[id];
+  // Empty Cart
+  const clearCart = async () => {
+    if (window.confirm("Delete all the items of the cart?")) {
+      try {
+        // Remove all items one by one
+        const cartItems = Object.keys(cart);
+        for (const itemId of cartItems) {
+          await removeFromCart(itemId);
         }
+      } catch (error) {
+        console.error("Error clearing cart:", error);
       }
-      // If equal, do nothing
-      return prev;
-    });
+    }
+  };
+
+  // Update quantity
+  const updateCartItemQuantity = async (itemId, newQuantity) => {
+    try {
+      if (newQuantity <= 0) {
+        await removeFromCart(itemId);
+        return;
+      }
+      
+      const response = await fetch(`${API_URL}/api/cart/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?._id || user?.id,
+          itemId: itemId,
+          quantity: newQuantity
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchCart();
+      }
+    } catch (error) {
+      console.error("Error updating cart:", error);
+    }
   };
 
   // Toggle veg mode from the profile
@@ -398,23 +393,13 @@ export const AppContextProvider = ({ children }) => {
   const fetchAddresses = async (forceRefresh = false) => {
     setAddressesLoading(true);
     try {
-      if (!user?.firebaseUid && !user?.uid) {
+      if (!user?.phone) {
         setAddresses([]);
         setAddressesLoading(false);
         return;
       }
-      const res = await fetch(`${API_URL}/api/user/getaddresses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firebaseUid: user.firebaseUid || user.uid }),
-      });
-      const data = await res.json();
-      console.log("Addresses fetched:", data);
-      if (data.success) {
-        setAddresses(data.addresses);
-      } else {
-        setAddresses([]);
-      }
+      // Mock addresses for now
+      setAddresses([]);
     } catch (e) {
       setAddresses([]);
     }
@@ -433,42 +418,13 @@ export const AppContextProvider = ({ children }) => {
         alert("Please fill in all required fields");
         return false;
       }
-      if (!user || (!user.firebaseUid && !user.uid)) {
+      if (!user?.phone) {
         alert("User information is missing. Please log in again.");
         return false;
       }
-      const firebaseUid = user.firebaseUid || user.uid;
-      const addressData = {
-        firebaseUid: firebaseUid,
-        address: {
-          type:
-            addressObj.type.charAt(0).toUpperCase() + addressObj.type.slice(1),
-          house_no: addressObj.house_no,
-          street: addressObj.street,
-          city: addressObj.city,
-          state: addressObj.state,
-          postalCode: addressObj.pincode,
-          landmark: addressObj.landmark || "",
-          lat: addressObj.lat,
-          lng: addressObj.lng,
-        },
-      };
-      const response = await fetch(`${API_URL}/api/auth/updateaddress`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(addressData),
-      });
-      const responseData = await response.json();
-      if (
-        response.ok &&
-        responseData.message?.toLowerCase().includes("added successfully")
-      ) {
-        await fetchAddresses();
-        return true;
-      } else {
-        alert(responseData.message || "Failed to add address");
-        return false;
-      }
+      // Mock address addition
+      await fetchAddresses();
+      return true;
     } catch (error) {
       console.error("Error adding address:", error);
       alert("Network error. Please try again.");
@@ -478,37 +434,15 @@ export const AppContextProvider = ({ children }) => {
 
   const handleDeleteAddress = async (addressId) => {
     try {
-      // Check if user is available
-      if (!user || (!user.firebaseUid && !user.uid)) {
+      if (!user?.phone) {
         alert("User information is missing. Please log in again.");
         return;
       }
-
-      // Get Firebase UID from user object
-      const firebaseUid = user.firebaseUid || user.uid;
-
-      const response = await fetch(`${API_URL}/api/user/deleteaddress`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firebaseUid,
-          addressId,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        await fetchAddresses();
-        // If the deleted address was selected, clear the selection
-        if (selectedAddressId === addressId) {
-          setSelectedAddressId(null);
-          localStorage.removeItem(SELECTED_ADDRESS_KEY);
-        }
-      } else {
-        alert(result.message || "Failed to delete address");
+      // Mock address deletion
+      await fetchAddresses();
+      if (selectedAddressId === addressId) {
+        setSelectedAddressId(null);
+        localStorage.removeItem(SELECTED_ADDRESS_KEY);
       }
     } catch (error) {
       console.error("Error deleting address:", error);
@@ -571,8 +505,8 @@ export const AppContextProvider = ({ children }) => {
 
       // Prepare order data
       const orderData = {
-        customer_id: user._id,
-        firebaseUid: user.firebaseUid,
+        customer_id: user._id || "mock_id",
+        phone: user.phone,
         address_id: selectedAddressId,
         item_ids: itemIds,
         is_variation,
@@ -593,7 +527,7 @@ export const AppContextProvider = ({ children }) => {
 
       // Call API to create order
       const response = await fetch(
-        "https://hotelbuddhaavenue.vercel.app/api/admin/createorder",
+        `${API_URL}/api/order/create`,
         {
           method: "POST",
           headers: {
@@ -669,6 +603,7 @@ export const AppContextProvider = ({ children }) => {
     handleDeleteAddress,
     addressesLoading,
     placeOrder,
+    fetchCart,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

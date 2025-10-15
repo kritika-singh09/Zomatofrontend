@@ -21,15 +21,18 @@ const FoodSlider = ({ onCategoryClick }) => {
     const fetchCategories = async () => {
       try {
         const response = await fetch(
-          "https://hotelbuddhaavenue.vercel.app/api/user/category"
+          `${import.meta.env.VITE_API_BASE_URL}/api/category/get`
         );
         const data = await response.json();
-
+        
+        console.log('Categories API response:', data);
+        
+        // Handle both array and object responses
         if (data.success && data.categories) {
           setCategories(data.categories);
         } else {
-          // Fallback to default categories if API fails
-          // setCategories(defaultCategories);
+          const categories = Array.isArray(data) ? data : [];
+          setCategories(categories);
         }
       } catch (error) {
         // console.error("Error fetching categories:", error);

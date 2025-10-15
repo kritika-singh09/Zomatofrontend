@@ -34,8 +34,40 @@ const FoodItemGrid = ({ onFoodClick }) => {
     const loadFoodItems = async () => {
       try {
         setLoading(true);
-        const items = await fetchFoodItems();
-        setFoodItems(items);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/item/get`);
+        const data = await response.json();
+        
+        console.log('FoodItemGrid - Raw response:', data);
+        
+        // Handle both array and object responses
+        const items = Array.isArray(data) ? data : (data.itemsdata || data.items || data.data || []);
+        
+        console.log('FoodItemGrid - Extracted items:', items);
+        
+        if (!items || items.length === 0) {
+          console.warn('FoodItemGrid - No items found');
+          setError('No items available');
+          return;
+        }
+        
+        // Format items for display
+        const formattedItems = items.map(item => ({
+          _id: item._id,
+          id: item._id,
+          name: item.name,
+          price: parseFloat(item.price),
+          priceFormatted: `₹${item.price}`,
+          image: item.image,
+          veg: item.veg,
+          rating: item.rating || 4.5,
+          description: item.description,
+          categoryId: item.category?._id || item.category,
+          variation: item.variation || [],
+          addon: item.addon || []
+        }));
+        
+        console.log('FoodItemGrid - Formatted items:', formattedItems);
+        setFoodItems(formattedItems);
         setError(null);
       } catch (err) {
         setError("Failed to load food items");
@@ -55,9 +87,13 @@ const FoodItemGrid = ({ onFoodClick }) => {
     return foodItems;
   }, [foodItems, vegModeEnabled]);
 
-  // Sort filtered items by rating and take top 6
+  // Sort filtered items by rating - show all items
   const topItems = useMemo(() => {
-    return [...filteredItems].sort((a, b) => b.rating - a.rating).slice(0, 6);
+    console.log('FoodItemGrid - filteredItems:', filteredItems);
+    console.log('FoodItemGrid - vegModeEnabled:', vegModeEnabled);
+    const sorted = [...filteredItems].sort((a, b) => b.rating - a.rating);
+    console.log('FoodItemGrid - topItems after sort:', sorted);
+    return sorted;
   }, [filteredItems]);
 
   return (

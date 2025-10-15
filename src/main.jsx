@@ -1,10 +1,10 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import React, { lazy, Suspense } from "react";
 import "./index.css";
 import App from "./App.jsx";
 import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import OtpEnter from "./pages/OtpEnter.jsx";
+
 import { AppContextProvider, useAppContext } from "./context/AppContext";
 import ItemDetail from "./pages/ItemDetail.jsx";
 import Cart from "./pages/Cart.jsx";
@@ -79,6 +79,7 @@ const AppRoutes = () => {
             </AuthRoute>
           }
         />
+
         <Route
           path="/item-detail"
           element={
@@ -153,7 +154,12 @@ const AppRoutes = () => {
 };
 
 createRoot(document.getElementById("root")).render(
-  <BrowserRouter>
+  <BrowserRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }}
+  >
     <AppContextProvider>
       <AppRoutes />
     </AppContextProvider>
