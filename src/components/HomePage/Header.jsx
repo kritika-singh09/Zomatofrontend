@@ -4,6 +4,7 @@ import { RiArrowDropDownLine } from "react-icons/ri";
 import { LuReceiptIndianRupee } from "react-icons/lu";
 import { FaUser, FaSearch } from "react-icons/fa";
 import { TiMicrophone } from "react-icons/ti";
+import { BiSolidLeaf } from "react-icons/bi";
 import FoodSlider from "./FoodSlider";
 import FilterSlider from "./FilterSlider";
 import FoodCard from "./FoodCard";
@@ -12,7 +13,7 @@ import { useAppContext } from "../../context/AppContext";
 
 const Header = ({ selectedAddress }) => {
   const [toggle, setToggle] = useState(false);
-  const { logout, user, navigate } = useAppContext();
+  const { logout, user, navigate, vegModeEnabled, toggleVegMode } = useAppContext();
   const [showMenu, setShowMenu] = useState(false);
 
   const handleProfileClick = () => {
@@ -55,8 +56,19 @@ const Header = ({ selectedAddress }) => {
         </div>
 
         <div className="flex items-center text-2xl">
-          {/* <LuReceiptIndianRupee /> */}
-          <div className="relative group mx-4">
+          {/* Veg Mode Toggle */}
+          <div 
+            onClick={toggleVegMode}
+            className={`flex items-center px-2 py-1 rounded-full cursor-pointer mx-2 transition-colors ${
+              vegModeEnabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+            }`}
+            title={vegModeEnabled ? 'Veg Mode On' : 'Veg Mode Off'}
+          >
+            <BiSolidLeaf className="text-sm mr-1" />
+            <span className="text-xs font-medium">VEG</span>
+          </div>
+          
+          <div className="relative group mx-2">
             <FaUser onClick={handleProfileClick} className="cursor-pointer" />
             <div
               className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg transition-all duration-300 z-50 ${

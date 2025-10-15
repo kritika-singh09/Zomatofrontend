@@ -82,10 +82,18 @@ const FoodSlider = ({ onCategoryClick }) => {
                 className="flex flex-col items-center cursor-pointer transition-transform hover:scale-105"
                 onClick={() => handleCategoryClick(category)}
               >
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl shadow-md">
-                  {category.image || "🍽️"}
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl shadow-md overflow-hidden">
+                  {category.image && category.image.startsWith('http') ? (
+                    <img 
+                      src={category.image} 
+                      alt={category.category || category.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    category.image || "🍽️"
+                  )}
                 </div>
-                <p className="mt-2 text-sm font-medium">{category.name}</p>
+                <p className="mt-2 text-sm font-medium">{category.category?.replace(/"/g, '') || category.name?.replace(/"/g, '') || 'Category'}</p>
               </div>
             ))}
           </div>
