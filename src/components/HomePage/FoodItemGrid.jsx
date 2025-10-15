@@ -19,7 +19,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-const FoodItemGrid = ({ onFoodClick }) => {
+const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
   const [foodItems, setFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -79,27 +79,29 @@ const FoodItemGrid = ({ onFoodClick }) => {
     loadFoodItems();
   }, []);
 
-  // Filter items based on veg mode
+  // Filter items based on veg mode and search filter
   const filteredItems = useMemo(() => {
-    console.log('FoodItemGrid - All foodItems:', foodItems);
-    console.log('FoodItemGrid - vegModeEnabled:', vegModeEnabled);
+    let items = foodItems;
     
+    // Apply veg mode filter
     if (vegModeEnabled) {
-      const vegItems = foodItems.filter((item) => item.veg === true);
-      console.log('FoodItemGrid - Veg filtered items:', vegItems);
-      return vegItems;
+      items = items.filter((item) => item.veg === true);
     }
-    console.log('FoodItemGrid - No veg filter, returning all items:', foodItems);
-    return foodItems;
-  }, [foodItems, vegModeEnabled]);
+    
+    // Apply search filter
+    if (searchFilter && searchFilter.trim()) {
+      items = items.filter((item) => 
+        item.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchFilter.toLowerCase())
+      );
+    }
+    
+    return items;
+  }, [foodItems, vegModeEnabled, searchFilter]);
 
-  // Sort filtered items by rating - show all items
+  // Sort filtered items by rating
   const topItems = useMemo(() => {
-    console.log('FoodItemGrid - filteredItems:', filteredItems);
-    console.log('FoodItemGrid - vegModeEnabled:', vegModeEnabled);
-    const sorted = [...filteredItems].sort((a, b) => b.rating - a.rating);
-    console.log('FoodItemGrid - topItems after sort:', sorted);
-    return sorted;
+    return [...filteredItems].sort((a, b) => b.rating - a.rating);
   }, [filteredItems]);
 
   return (

@@ -326,13 +326,31 @@ export const AppContextProvider = ({ children }) => {
     setAddressesLoading(true);
     try {
       if (!user?.phone) {
+        console.log('No user phone available');
         setAddresses([]);
         setAddressesLoading(false);
         return;
       }
-      // Mock addresses for now
-      setAddresses([]);
+      
+      console.log('Fetching addresses for phone:', user.phone);
+      const response = await fetch(`${API_URL}/api/address/get`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: user.phone })
+      });
+      
+      const data = await response.json();
+      console.log('Address API response:', data);
+      
+      if (data.success && data.addresses) {
+        console.log('Setting addresses:', data.addresses);
+        setAddresses(data.addresses);
+      } else {
+        console.log('No addresses found or API failed');
+        setAddresses([]);
+      }
     } catch (e) {
+      console.error('Error fetching addresses:', e);
       setAddresses([]);
     }
     setAddressesLoading(false);
@@ -354,9 +372,24 @@ export const AppContextProvider = ({ children }) => {
         alert("User information is missing. Please log in again.");
         return false;
       }
-      // Mock address addition
-      await fetchAddresses();
-      return true;
+      
+      const response = await fetch(`${API_URL}/api/address/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: user.phone,
+          ...addressObj
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        await fetchAddresses();
+        return true;
+      } else {
+        alert(data.message || 'Failed to add address');
+        return false;
+      }
     } catch (error) {
       console.error("Error adding address:", error);
       alert("Network error. Please try again.");
@@ -370,11 +403,25 @@ export const AppContextProvider = ({ children }) => {
         alert("User information is missing. Please log in again.");
         return;
       }
-      // Mock address deletion
-      await fetchAddresses();
-      if (selectedAddressId === addressId) {
-        setSelectedAddressId(null);
-        localStorage.removeItem(SELECTED_ADDRESS_KEY);
+      
+      const response = await fetch(`${API_URL}/api/address/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: user.phone,
+          addressId: addressId
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        await fetchAddresses();
+        if (selectedAddressId === addressId) {
+          setSelectedAddressId(null);
+          localStorage.removeItem(SELECTED_ADDRESS_KEY);
+        }
+      } else {
+        alert(data.message || 'Failed to delete address');
       }
     } catch (error) {
       console.error("Error deleting address:", error);
