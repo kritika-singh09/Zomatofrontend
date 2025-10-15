@@ -12,6 +12,10 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",
     "axios": "^1.9.0",
+<<<<<<< HEAD
+=======
+    "firebase": "^12.4.0",
+>>>>>>> 54df85cec760808530748ed6eebe197604f599f3
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "react": "18.2.0",

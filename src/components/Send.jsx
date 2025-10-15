@@ -20,7 +20,7 @@ const Send = () => {
     }
   }, [timer]);
 
-  const handleResend = async () => {
+  const handleResend = () => {
     if (!phone || phone.length !== 10) {
       toast.error("Invalid phone number");
       navigate('/');

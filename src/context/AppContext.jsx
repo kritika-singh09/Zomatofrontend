@@ -32,8 +32,16 @@ export const AppContextProvider = ({ children }) => {
     rating: 4.5,
   });
 
-  // Initialize cart state
-  const [cart, setCart] = useState({});
+  // Initialize cart state from localStorage
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem("cart");
+      return savedCart ? JSON.parse(savedCart) : {};
+    } catch (error) {
+      console.error("Error loading cart from localStorage:", error);
+      return {};
+    }
+  });
   const [showCartNotification, setShowCartNotification] = useState(false);
 
   // Use refs to prevent infinite loops
@@ -58,12 +66,10 @@ export const AppContextProvider = ({ children }) => {
     }
   }, []);
 
-  // Fetch cart on user login
+  // Save cart to localStorage whenever cart changes
   useEffect(() => {
-    if (currentUser && (user?._id || user?.id)) {
-      fetchCart();
-    }
-  }, [currentUser, user]);
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
 
   // Generate unique ID for base item + variation
   const getBaseVariationId = (item, variation) => {
@@ -173,84 +179,45 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  // Fetch cart from API
-  const fetchCart = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/cart/get`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?._id || user?.id })
-      });
-      const data = await response.json();
-      if (data.success && data.cartItems) {
-        const cartObj = {};
-        data.cartItems.forEach(item => {
-          cartObj[item.itemId] = item;
-        });
-        setCart(cartObj);
-      } else {
-        setCart({});
-      }
-    } catch (error) {
-      console.error("Error fetching cart:", error);
-    }
-  };
+
 
   // Add item to cart
-  const addToCart = async (item, variation = null, addons = []) => {
-    if (!user?._id && !user?.id) {
-      console.error("User ID not available");
-      return;
-    }
-    try {
-      const response = await fetch(`${API_URL}/api/cart/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user._id || user.id,
-          itemId: item._id,
+  const addToCart = (item, variation = null, addons = []) => {
+    const id = getBaseVariationId(item, variation);
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      if (prev[id]) {
+        prev[id].quantity += 1;
+      } else {
+        prev[id] = {
+          ...item,
+          id: item._id || item.id,
+          variation,
           quantity: 1,
-          variation: variation?._id || null,
-          addons: addons.map(addon => addon._id || addon)
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        await fetchCart();
-        setShowCartNotification(true);
-        setTimeout(() => setShowCartNotification(false), 3000);
+          addons: addons || [],
+        };
       }
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-    }
+      return prev;
+    });
+    setShowCartNotification(true);
+    setTimeout(() => setShowCartNotification(false), 3000);
   };
 
-  const addToCartWithQuantity = async (item, quantity, variation = null, addons = []) => {
-    if (!user?._id && !user?.id) {
-      console.error("User ID not available");
-      return;
-    }
-    try {
-      const response = await fetch(`${API_URL}/api/cart/add`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user._id || user.id,
-          itemId: item._id,
-          quantity: quantity,
-          variation: variation?._id || null,
-          addons: addons.map(addon => addon._id || addon)
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        await fetchCart();
-        setShowCartNotification(true);
-        setTimeout(() => setShowCartNotification(false), 3000);
-      }
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-    }
+  const addToCartWithQuantity = (item, quantity, variation = null, addons = []) => {
+    const id = getBaseVariationId(item, variation);
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      prev[id] = {
+        ...item,
+        id: item._id || item.id,
+        variation,
+        quantity: quantity,
+        addons: addons || [],
+      };
+      return prev;
+    });
+    setShowCartNotification(true);
+    setTimeout(() => setShowCartNotification(false), 3000);
   };
 
   // Add to cart
@@ -291,64 +258,35 @@ export const AppContextProvider = ({ children }) => {
   };
 
   // Remove item from cart
-  const removeFromCart = async (itemId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/cart/remove`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?._id || user?.id,
-          itemId: itemId
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        await fetchCart();
-      }
-    } catch (error) {
-      console.error("Error removing from cart:", error);
-    }
+  const removeFromCart = (itemId) => {
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      delete prev[itemId];
+      return prev;
+    });
   };
 
   // Empty Cart
-  const clearCart = async () => {
+  const clearCart = () => {
     if (window.confirm("Delete all the items of the cart?")) {
-      try {
-        // Remove all items one by one
-        const cartItems = Object.keys(cart);
-        for (const itemId of cartItems) {
-          await removeFromCart(itemId);
-        }
-      } catch (error) {
-        console.error("Error clearing cart:", error);
-      }
+      setCart({});
     }
   };
 
   // Update quantity
-  const updateCartItemQuantity = async (itemId, newQuantity) => {
-    try {
-      if (newQuantity <= 0) {
-        await removeFromCart(itemId);
-        return;
-      }
-      
-      const response = await fetch(`${API_URL}/api/cart/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?._id || user?.id,
-          itemId: itemId,
-          quantity: newQuantity
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        await fetchCart();
-      }
-    } catch (error) {
-      console.error("Error updating cart:", error);
+  const updateCartItemQuantity = (itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeFromCart(itemId);
+      return;
     }
+    
+    setCart((prevCart) => {
+      const prev = { ...prevCart };
+      if (prev[itemId]) {
+        prev[itemId].quantity = newQuantity;
+      }
+      return prev;
+    });
   };
 
   // Toggle veg mode from the profile
@@ -368,16 +306,10 @@ export const AppContextProvider = ({ children }) => {
           (entry.variation ? parseFloat(entry.variation.price) || 0 : 0)) *
         entry.quantity;
       baseTotal += basePrice;
-      // Check if addonsList exists before trying to iterate over it
-      if (entry.addonsList && Array.isArray(entry.addonsList)) {
-        entry.addonsList.forEach((addons) => {
-          if (Array.isArray(addons)) {
-            addonTotal +=
-              addons.reduce((sum, addonName) => {
-                // You may want to map addonName to price here if needed
-                return sum + 0; // Replace 0 with actual price lookup
-              }, 0) || 0;
-          }
+      // Check if addons exists and calculate addon prices
+      if (entry.addons && Array.isArray(entry.addons)) {
+        entry.addons.forEach((addon) => {
+          addonTotal += (parseFloat(addon.price) || 0) * entry.quantity;
         });
       }
     });
@@ -487,7 +419,7 @@ export const AppContextProvider = ({ children }) => {
       const finalTotal = cartTotals.total + gstAmount + deliveryFee;
 
       // Get the actual item IDs from the cart items
-      const itemIds = cartItems.map((item) => item._id).filter(Boolean);
+      const itemIds = cartItems.map((item) => item._id || item.id).filter(Boolean);
 
       // is_variation and variation
       const is_variation = cartItems.some((item) => !!item.variation);
@@ -497,10 +429,10 @@ export const AppContextProvider = ({ children }) => {
 
       // is_addon and addon
       const is_addon = cartItems.some(
-        (item) => Array.isArray(item.addonsList) && item.addonsList.length > 0
+        (item) => Array.isArray(item.addons) && item.addons.length > 0
       );
       const addon = is_addon
-        ? cartItems.map((item) => item.addonsList || [])
+        ? cartItems.map((item) => item.addons || [])
         : [];
 
       // Prepare order data
@@ -542,7 +474,6 @@ export const AppContextProvider = ({ children }) => {
       if (result.success || result.message === "Order placed") {
         // Clear cart on successful order
         setCart({});
-        localStorage.removeItem("cart");
         navigate(`/order-confirmation/${result.orderId || result._id}`);
         return {
           success: true,
@@ -603,7 +534,6 @@ export const AppContextProvider = ({ children }) => {
     handleDeleteAddress,
     addressesLoading,
     placeOrder,
-    fetchCart,
   };
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

@@ -60,7 +60,7 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
   //     for (let i = 0; i < 50; i++) {
   //       const start = Date.now();
   //       await axios.get(
-  //         "https://hotelbuddhaavenue.vercel.app/api/user/category"
+  //         "http://localhost:4000/api/user/category"
   //       );
   //       total += Date.now() - start;
   //     }
