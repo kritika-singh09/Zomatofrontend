@@ -28,22 +28,20 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         if (!window.mappls && !window.MapmyIndia) {
           console.log('MapmyIndia SDK not available on localhost, using fallback');
           // Create interactive fallback map for localhost
-          mapContainer.style.background = 'linear-gradient(135deg, #e8f4f8 0%, #d1e7dd 100%)';
-          mapContainer.style.position = 'relative';
-          mapContainer.style.cursor = 'pointer';
+          mapContainer.className = 'bg-gradient-to-br from-blue-100 to-green-100 relative cursor-pointer';
           
           const centerDiv = document.createElement('div');
-          centerDiv.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;';
+          centerDiv.className = 'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center';
           
           centerDiv.innerHTML = `
-            <div style="font-size: 32px; margin-bottom: 10px;">📍</div>
-            <div style="color: #495057; font-weight: 500;">Interactive Map</div>
-            <div style="font-size: 12px; color: #6c757d; margin-top: 5px;">Click to select location</div>
-            <div id="coord-display" style="font-size: 10px; color: #6c757d; margin-top: 3px;">Lat: ${selectedLocation.lat.toFixed(4)}, Lng: ${selectedLocation.lng.toFixed(4)}</div>
+            <div class="text-3xl mb-2">📍</div>
+            <div class="text-gray-700 font-medium">Interactive Map</div>
+            <div class="text-xs text-gray-500 mt-1">Click to select location</div>
+            <div id="coord-display" class="text-xs text-gray-500 mt-1">Lat: ${selectedLocation.lat.toFixed(4)}, Lng: ${selectedLocation.lng.toFixed(4)}</div>
           `;
           
           const labelDiv = document.createElement('div');
-          labelDiv.style.cssText = 'position: absolute; top: 10px; right: 10px; background: white; padding: 5px 8px; border-radius: 4px; font-size: 10px; color: #666;';
+          labelDiv.className = 'absolute top-2 right-2 bg-white px-2 py-1 rounded text-xs text-gray-600';
           labelDiv.textContent = 'MapmyIndia Fallback';
           
           mapContainer.appendChild(centerDiv);
@@ -144,7 +142,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           mapContainer._marker = marker;
         }, 1000);
         
-        console.log('Markers created successfully');
+        console.log('Map initialized successfully, creating markers...');
         
         const updateLocation = (lat, lng) => {
           console.log('Updating location to:', lat, lng);
@@ -288,14 +286,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         <div className="relative">
           <div
             id="address-selector-map"
-            style={{ 
-              width: '100%', 
-              height: '300px',
-              position: 'relative',
-              backgroundColor: '#f0f0f0',
-              display: 'block',
-              visibility: 'visible'
-            }}
+            className="w-full h-[300px] relative bg-gray-100 block visible"
           ></div>
           
           <button

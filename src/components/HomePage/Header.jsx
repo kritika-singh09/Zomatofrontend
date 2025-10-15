@@ -157,8 +157,7 @@ const Header = ({ selectedAddress, onSearchSelect }) => {
               <RiArrowDropDownLine className="text-lg" />
             </div>
             <div
-              className="text-sm ml-2"
-              style={{ transform: "translateY(-3px)" }}
+              className="text-sm ml-2 -translate-y-[3px]"
             >
               {getAddressLine2()}
             </div>
