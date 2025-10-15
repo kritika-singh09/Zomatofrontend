@@ -84,8 +84,9 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         
         console.log('Map instance created:', mapInstance);
         
-        mapInstance.addListener('load', () => {
-          console.log('Map loaded, adding markers...');
+        // Add markers after map loads
+        setTimeout(() => {
+          console.log('Adding markers to map...');
           
           const restaurantMarker = new mapAPI.Marker({
             map: mapInstance,
@@ -101,6 +102,8 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
             popupHtml: "📍 Drag to select location"
           });
           
+          console.log('Markers created:', { restaurantMarker, marker });
+          
           const updateLocation = (lat, lng) => {
             setSelectedLocation({ lat, lng });
             fetchAddressFromMappls(lat, lng);
@@ -108,12 +111,14 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
 
           marker.addListener('dragend', () => {
             const pos = marker.getPosition();
+            console.log('Marker dragged to:', pos);
             updateLocation(pos.lat, pos.lng);
           });
 
           mapInstance.addListener('click', (e) => {
             const lat = e.lat || e.lngLat[1];
             const lng = e.lng || e.lngLat[0];
+            console.log('Map clicked at:', lat, lng);
             marker.setPosition({ lat, lng });
             updateLocation(lat, lng);
           });
@@ -122,7 +127,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           mapContainer._marker = marker;
           
           fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
-        });
+        }, 2000);
 
         const updateLocation = (lat, lng) => {
           setSelectedLocation({ lat, lng });
