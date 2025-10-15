@@ -91,17 +91,58 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         // Create markers immediately after map creation
         console.log('Creating markers...');
         
-        // Restaurant marker (red pin)
-        const restaurantMarker = new mapAPI.Marker();
-        restaurantMarker.setPosition({ lat: restaurantLocation.lat, lng: restaurantLocation.lng });
-        restaurantMarker.setMap(mapInstance);
-        restaurantMarker.setDraggable(false);
-        
-        // Delivery marker (blue pin, draggable)
-        marker = new mapAPI.Marker();
-        marker.setPosition({ lat: selectedLocation.lat, lng: selectedLocation.lng });
-        marker.setMap(mapInstance);
-        marker.setDraggable(true);
+        // Wait for map to load before adding markers
+        setTimeout(() => {
+          // Restaurant marker (red pin)
+          const restaurantMarker = mapAPI.marker({
+            map: mapInstance,
+            position: [restaurantLocation.lng, restaurantLocation.lat],
+            popupHtml: "🍽️ Restaurant"
+          });
+          
+          // Delivery marker (blue pin, draggable)
+          marker = mapAPI.marker({
+            map: mapInstance,
+            position: [selectedLocation.lng, selectedLocation.lat],
+            draggable: true,
+            popupHtml: "📍 Drag to select delivery location"
+          });
+          
+          console.log('Markers created successfully');
+          
+          // Marker drag events
+          marker.addListener('dragstart', () => {
+            mapInstance.setOptions({ draggable: false });
+          });
+          
+          marker.addListener('dragend', () => {
+            mapInstance.setOptions({ draggable: true });
+            const pos = marker.getPosition();
+            if (pos) {
+              updateLocation(pos[1], pos[0]); // lat, lng
+            }
+          });
+
+          // Map click event
+          mapInstance.addListener('click', (e) => {
+            let lat, lng;
+            if (e.lngLat && Array.isArray(e.lngLat)) {
+              lng = e.lngLat[0];
+              lat = e.lngLat[1];
+            } else if (e.lat && e.lng) {
+              lat = e.lat;
+              lng = e.lng;
+            } else {
+              return;
+            }
+            
+            marker.setPosition([lng, lat]);
+            updateLocation(lat, lng);
+          });
+
+          mapContainer._mapInstance = mapInstance;
+          mapContainer._marker = marker;
+        }, 1000);
         
         console.log('Markers created successfully');
         
@@ -111,38 +152,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           fetchAddressFromMappls(lat, lng);
         };
 
-        // Marker drag event - prevent map dragging when dragging marker
-        marker.addListener('dragstart', () => {
-          mapInstance.setOptions({ draggable: false });
-        });
-        
-        marker.addListener('dragend', () => {
-          mapInstance.setOptions({ draggable: true });
-          const pos = marker.getPosition();
-          if (pos) {
-            updateLocation(pos.lat, pos.lng);
-          }
-        });
 
-        // Map click event
-        mapInstance.addListener('click', (e) => {
-          let lat, lng;
-          if (e.lngLat && Array.isArray(e.lngLat)) {
-            lng = e.lngLat[0];
-            lat = e.lngLat[1];
-          } else if (e.lat && e.lng) {
-            lat = e.lat;
-            lng = e.lng;
-          } else {
-            return;
-          }
-          
-          marker.setPosition({ lat, lng });
-          updateLocation(lat, lng);
-        });
-
-        mapContainer._mapInstance = mapInstance;
-        mapContainer._marker = marker;
         
         // Get initial address
         fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
