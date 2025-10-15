@@ -79,7 +79,11 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
 
         mapInstance = new mapAPI.Map('address-selector-map', {
           center: [83.378906, 26.715511],
-          zoom: 13
+          zoom: 15,
+          minZoom: 10,
+          maxZoom: 18,
+          zoomControl: true,
+          scrollwheel: true
         });
         
         console.log('Map instance created:', mapInstance);
@@ -92,7 +96,6 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           map: mapInstance,
           position: { lat: restaurantLocation.lat, lng: restaurantLocation.lng },
           draggable: false,
-          fitbounds: true,
           popupHtml: "🍽️ Restaurant"
         });
         
@@ -101,7 +104,6 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           map: mapInstance,
           position: { lat: selectedLocation.lat, lng: selectedLocation.lng },
           draggable: true,
-          fitbounds: true,
           popupHtml: "📍 Drag to select delivery location"
         });
         
@@ -113,8 +115,13 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           fetchAddressFromMappls(lat, lng);
         };
 
-        // Marker drag event
+        // Marker drag event - prevent map dragging when dragging marker
+        marker.addListener('dragstart', () => {
+          mapInstance.setOptions({ draggable: false });
+        });
+        
         marker.addListener('dragend', () => {
+          mapInstance.setOptions({ draggable: true });
           const pos = marker.getPosition();
           if (pos) {
             updateLocation(pos.lat, pos.lng);
@@ -212,7 +219,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           
           // Center map on current location
           mapInstance.setCenter([longitude, latitude]);
-          mapInstance.setZoom(16);
+          mapInstance.setZoom(15);
           
           // Move marker to current location
           marker.setPosition({ lat: latitude, lng: longitude });
