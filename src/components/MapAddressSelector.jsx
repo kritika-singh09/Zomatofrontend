@@ -85,26 +85,43 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         console.log('Map instance created:', mapInstance);
         
         mapInstance.addListener('load', () => {
-          console.log('Map tiles loaded successfully');
-        });
-        
-        // Force refresh to load tiles
-        setTimeout(() => {
-          mapInstance.setZoom(14);
-          mapInstance.setCenter([83.378906, 26.715511]);
-        }, 1000);
+          console.log('Map loaded, adding markers...');
+          
+          const restaurantMarker = new mapAPI.Marker({
+            map: mapInstance,
+            position: { lat: restaurantLocation.lat, lng: restaurantLocation.lng },
+            popupHtml: "🍽️ Restaurant",
+            draggable: false
+          });
 
-        const restaurantMarker = new mapAPI.Marker({
-          map: mapInstance,
-          position: { lat: restaurantLocation.lat, lng: restaurantLocation.lng },
-          popupHtml: "🍽️ Restaurant"
-        });
+          marker = new mapAPI.Marker({
+            map: mapInstance,
+            position: { lat: selectedLocation.lat, lng: selectedLocation.lng },
+            draggable: true,
+            popupHtml: "📍 Drag to select location"
+          });
+          
+          const updateLocation = (lat, lng) => {
+            setSelectedLocation({ lat, lng });
+            fetchAddressFromMappls(lat, lng);
+          };
 
-        marker = new mapAPI.Marker({
-          map: mapInstance,
-          position: { lat: selectedLocation.lat, lng: selectedLocation.lng },
-          draggable: true,
-          popupHtml: "📍 Delivery Location"
+          marker.addListener('dragend', () => {
+            const pos = marker.getPosition();
+            updateLocation(pos.lat, pos.lng);
+          });
+
+          mapInstance.addListener('click', (e) => {
+            const lat = e.lat || e.lngLat[1];
+            const lng = e.lng || e.lngLat[0];
+            marker.setPosition({ lat, lng });
+            updateLocation(lat, lng);
+          });
+
+          mapContainer._mapInstance = mapInstance;
+          mapContainer._marker = marker;
+          
+          fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
         });
 
         const updateLocation = (lat, lng) => {
