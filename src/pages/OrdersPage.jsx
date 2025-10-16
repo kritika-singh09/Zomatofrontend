@@ -95,13 +95,13 @@ const OrdersPage = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://24-7-b.vercel.app/api/user/getorders`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/order/get`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ firebaseUid: user.firebaseUid }),
+            body: JSON.stringify({ customer_id: user._id }),
           }
         );
 

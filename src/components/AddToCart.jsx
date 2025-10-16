@@ -3,7 +3,7 @@ import { useAppContext } from "../context/AppContext";
 import { AiOutlinePlus, AiOutlineMinus, AiOutlineDelete } from "react-icons/ai";
 
 const AddToCartButton = ({ item, onFoodClick }) => {
-  const { cart, removeFromCart, updateCartItemQuantity, addToCart } = useAppContext();
+  const { cart, removeFromCart } = useAppContext();
 
   // Check if item is valid before proceeding
   if (!item || !item.id) {
@@ -61,28 +61,9 @@ const AddToCartButton = ({ item, onFoodClick }) => {
     onFoodClick(item);
   };
 
-  const handleIncreaseQuantity = (e) => {
+  const handleQuantityChange = (e) => {
     e.stopPropagation();
-    if (hasCustomizations) {
-      // If item has customizations, open the customization modal
-      onFoodClick(item);
-    } else {
-      // Direct add to cart for simple items
-      addToCart(item);
-    }
-  };
-
-  const handleDecreaseQuantity = (e) => {
-    e.stopPropagation();
-    if (quantity === 1) {
-      removeFromCart(cartItemId);
-    } else if (hasCustomizations) {
-      // If item has customizations, open the customization modal
-      onFoodClick(item);
-    } else {
-      // Direct quantity update for simple items
-      updateCartItemQuantity(cartItemId, quantity - 1);
-    }
+    onFoodClick(item);
   };
 
   if (quantity > 0) {
@@ -90,7 +71,14 @@ const AddToCartButton = ({ item, onFoodClick }) => {
       <div className="flex items-center border w-20 border-primary rounded-md overflow-hidden">
         <button
           className={`w-8 h-8 flex items-center justify-center bg-light text-primary`}
-          onClick={handleDecreaseQuantity}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (quantity === 1) {
+              removeFromCart(cartItemId);
+            } else {
+              onFoodClick(item);
+            }
+          }}
         >
           {quantity === 1 ? (
             <AiOutlineDelete size={16} />
@@ -103,7 +91,7 @@ const AddToCartButton = ({ item, onFoodClick }) => {
         </span>
         <button
           className="w-8 h-8 bg-light text-primary flex items-center justify-center"
-          onClick={handleIncreaseQuantity}
+          onClick={handleQuantityChange}
         >
           <AiOutlinePlus size={16} />
         </button>

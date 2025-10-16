@@ -261,13 +261,7 @@ export const AppContextProvider = ({ children }) => {
   const removeFromCart = (itemId) => {
     setCart((prevCart) => {
       const prev = { ...prevCart };
-      // Find the cart key that contains this item ID
-      const cartKey = Object.keys(prev).find(key => 
-        prev[key].id === itemId || prev[key]._id === itemId
-      );
-      if (cartKey) {
-        delete prev[cartKey];
-      }
+      delete prev[itemId];
       return prev;
     });
   };
@@ -288,12 +282,8 @@ export const AppContextProvider = ({ children }) => {
     
     setCart((prevCart) => {
       const prev = { ...prevCart };
-      // Find the cart key that contains this item ID
-      const cartKey = Object.keys(prev).find(key => 
-        prev[key].id === itemId || prev[key]._id === itemId
-      );
-      if (cartKey && prev[cartKey]) {
-        prev[cartKey].quantity = newQuantity;
+      if (prev[itemId]) {
+        prev[itemId].quantity = newQuantity;
       }
       return prev;
     });
@@ -335,18 +325,18 @@ export const AppContextProvider = ({ children }) => {
   const fetchAddresses = async (forceRefresh = false) => {
     setAddressesLoading(true);
     try {
-      if (!user?.phone) {
-        console.log('No user phone available');
+      if (!user?._id) {
+        console.log('No user ID available');
         setAddresses([]);
         setAddressesLoading(false);
         return;
       }
       
-      console.log('Fetching addresses for phone:', user.phone);
+      console.log('Fetching addresses for user ID:', user._id);
       const response = await fetch(`${API_URL}/api/address/get`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: user.phone })
+        body: JSON.stringify({ userId: user._id })
       });
       
       const data = await response.json();
@@ -378,7 +368,7 @@ export const AppContextProvider = ({ children }) => {
         alert("Please fill in all required fields");
         return false;
       }
-      if (!user?.phone) {
+      if (!user?._id) {
         alert("User information is missing. Please log in again.");
         return false;
       }
@@ -387,7 +377,7 @@ export const AppContextProvider = ({ children }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: user.phone,
+          userId: user._id,
           ...addressObj
         })
       });
@@ -409,16 +399,16 @@ export const AppContextProvider = ({ children }) => {
 
   const handleDeleteAddress = async (addressId) => {
     try {
-      if (!user?.phone) {
+      if (!user?._id) {
         alert("User information is missing. Please log in again.");
         return;
       }
       
       const response = await fetch(`${API_URL}/api/address/delete`, {
-        method: 'POST',
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: user.phone,
+          userId: user._id,
           addressId: addressId
         })
       });

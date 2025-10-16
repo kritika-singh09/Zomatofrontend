@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaFilter, FaChevronDown, FaChevronUp, FaStar } from "react-icons/fa";
 import { BiSolidLeaf } from "react-icons/bi";
-import { fetchFoodItems, sortItems } from "../../services/api";
+import { fetchFoodItems } from "../../services/api";
 import { useAppContext } from "../../context/AppContext";
 import { AiOutlineMinus, AiOutlinePlus } from "react-icons/ai";
 import AddToCartButton from "../AddToCart";
@@ -261,83 +261,9 @@ const Recommendation = ({ food, onFoodClick, selectedCategory }) => {
   };
 
   // Select filter option
-  const selectFilter = async (filter) => {
+  const selectFilter = (filter) => {
     setActiveFilter(filter);
     setIsFilterOpen(false);
-    
-    // Map filter to API parameters
-    let sortBy = 'rating';
-    let veg = null;
-    
-    switch(filter) {
-      case 'All':
-        sortBy = 'rating';
-        break;
-      case 'Recommended':
-        sortBy = 'rating';
-        break;
-      case 'Rating':
-        sortBy = 'rating';
-        break;
-      case 'Price: Low to High':
-        sortBy = 'price_low';
-        break;
-      case 'Price: High to Low':
-        sortBy = 'price_high';
-        break;
-      case 'Delivery Time':
-        sortBy = 'delivery';
-        break;
-      default:
-        sortBy = 'rating';
-    }
-    
-    try {
-      setLoading(true);
-      const result = await sortItems(sortBy, veg);
-      
-      if (result.success && result.data) {
-        // Format the sorted data
-        const items = result.data.map(item => ({
-          _id: item._id,
-          id: item._id,
-          name: item.name,
-          categoryId: item.category?._id || item.category,
-          price: parseFloat(item.price),
-          priceFormatted: `₹${item.price}`,
-          rating: item.rating || 4.5,
-          image: item.image,
-          veg: item.veg,
-          description: item.description,
-          longDescription: item.longDescription,
-          variation: item.variation || [],
-          addon: item.addon || [],
-          bestseller: item.rating >= 4.6,
-          deliveryTime: Math.floor(Math.random() * 20) + 20
-        }));
-        
-        // Re-group by categories
-        const groupedItems = items.reduce((acc, item) => {
-          const categoryName = 'Sorted Items';
-          if (!acc[categoryName]) {
-            acc[categoryName] = {
-              name: categoryName,
-              items: [],
-            };
-          }
-          acc[categoryName].items.push(item);
-          return acc;
-        }, {});
-        
-        const categoriesArray = Object.values(groupedItems);
-        setFilteredCategories(categoriesArray);
-        setExpandedAccordion(categoriesArray[0]?.name);
-      }
-    } catch (error) {
-      console.error('Filter error:', error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Toggle accordion
