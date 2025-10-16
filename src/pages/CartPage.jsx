@@ -38,6 +38,7 @@ const CartPage = () => {
 
   // Update quantity handler
   const handleUpdateQuantity = (itemId, newQuantity) => {
+    console.log('Updating quantity:', itemId, newQuantity);
     if (newQuantity <= 0) {
       handleRemoveItem(itemId);
       return;
@@ -47,6 +48,7 @@ const CartPage = () => {
 
   // Remove item handler
   const handleRemoveItem = (itemId) => {
+    console.log('Removing item:', itemId);
     removeFromCart(itemId);
   };
 
@@ -142,8 +144,8 @@ const CartPage = () => {
             <CartItem
               key={item.id}
               item={item}
-              onUpdateQuantity={updateCartItemQuantity}
-              onRemoveItem={removeFromCart}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={handleRemoveItem}
               onAddMore={() => window.history.back()}
             />
           ))}

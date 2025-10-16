@@ -43,11 +43,16 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {
           <div className="flex items-center">
             <button
               className="cursor-pointer w-8 h-8 flex items-center justify-center border border-gray-300 rounded-l-md bg-gray-50 text-gray-600 hover:bg-gray-100"
-              onClick={() =>
-                item.quantity <= 1
-                  ? onRemoveItem(item.id)
-                  : onUpdateQuantity(item.id, item.quantity - 1)
-              }
+              onClick={(e) => {
+                e.stopPropagation();
+                const itemId = item.id || item._id;
+                console.log('Minus clicked:', itemId, 'quantity:', item.quantity);
+                if (item.quantity <= 1) {
+                  onRemoveItem(itemId);
+                } else {
+                  onUpdateQuantity(itemId, item.quantity - 1);
+                }
+              }}
             >
               {item.quantity <= 1 ? (
                 <FaTrash size={12} />
@@ -60,7 +65,12 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {
             </span>
             <button
               className=" cursor-pointer w-8 h-8 flex items-center justify-center border border-gray-300 rounded-r-md bg-gray-50 text-gray-600 hover:bg-gray-100"
-              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+              onClick={(e) => {
+                e.stopPropagation();
+                const itemId = item.id || item._id;
+                console.log('Plus clicked:', itemId, 'quantity:', item.quantity);
+                onUpdateQuantity(itemId, item.quantity + 1);
+              }}
             >
               <FaPlus size={12} />
             </button>
@@ -71,7 +81,12 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, onAddMore }) => {
       <div className="flex justify-between items-center">
         <button
           className="text-red-500 text-sm flex items-center cursor-pointer"
-          onClick={() => onRemoveItem(item.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            const itemId = item.id || item._id;
+            console.log('Remove clicked:', itemId);
+            onRemoveItem(itemId);
+          }}
         >
           <FaTrash size={10} className="mr-1" /> Remove
         </button>

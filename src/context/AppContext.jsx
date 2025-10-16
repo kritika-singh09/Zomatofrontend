@@ -261,7 +261,13 @@ export const AppContextProvider = ({ children }) => {
   const removeFromCart = (itemId) => {
     setCart((prevCart) => {
       const prev = { ...prevCart };
-      delete prev[itemId];
+      // Find the cart key that contains this item ID
+      const cartKey = Object.keys(prev).find(key => 
+        prev[key].id === itemId || prev[key]._id === itemId
+      );
+      if (cartKey) {
+        delete prev[cartKey];
+      }
       return prev;
     });
   };
@@ -282,8 +288,12 @@ export const AppContextProvider = ({ children }) => {
     
     setCart((prevCart) => {
       const prev = { ...prevCart };
-      if (prev[itemId]) {
-        prev[itemId].quantity = newQuantity;
+      // Find the cart key that contains this item ID
+      const cartKey = Object.keys(prev).find(key => 
+        prev[key].id === itemId || prev[key]._id === itemId
+      );
+      if (cartKey && prev[cartKey]) {
+        prev[cartKey].quantity = newQuantity;
       }
       return prev;
     });
