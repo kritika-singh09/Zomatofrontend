@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import FoodCard from "./FoodCard";
+import FilterSlider from "./FilterSlider";
 import { fetchFoodItems } from "../../services/api";
 import { useAppContext } from "../../context/AppContext";
 
@@ -21,9 +22,30 @@ const SkeletonCard = () => (
 
 const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
   const [foodItems, setFoodItems] = useState([]);
+  const [filteredFoodItems, setFilteredFoodItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { vegModeEnabled } = useAppContext();
+
+  const handleFilterChange = (filteredData) => {
+    if (filteredData && Array.isArray(filteredData)) {
+      const formattedItems = filteredData.map(item => ({
+        _id: item._id,
+        id: item._id,
+        name: item.name,
+        price: parseFloat(item.price),
+        priceFormatted: `₹${item.price}`,
+        image: item.image,
+        veg: item.veg,
+        rating: item.rating || 4.5,
+        description: item.description,
+        categoryId: item.category?._id || item.category,
+        variation: item.variation || [],
+        addon: item.addon || []
+      }));
+      setFilteredFoodItems(formattedItems);
+    }
+  };
 
   // Sort food items by rating in descending order and take only the top 6
   // const topRatedFoodItems = [...foodItems]
@@ -68,6 +90,7 @@ const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
         
         console.log('FoodItemGrid - Formatted items:', formattedItems);
         setFoodItems(formattedItems);
+        setFilteredFoodItems(formattedItems);
         setError(null);
       } catch (err) {
         setError("Failed to load food items");
@@ -81,7 +104,7 @@ const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
 
   // Filter items based on veg mode and search filter
   const filteredItems = useMemo(() => {
-    let items = foodItems;
+    let items = filteredFoodItems.length > 0 ? filteredFoodItems : foodItems;
     
     // Apply veg mode filter
     if (vegModeEnabled) {
@@ -97,7 +120,7 @@ const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
     }
     
     return items;
-  }, [foodItems, vegModeEnabled, searchFilter]);
+  }, [foodItems, filteredFoodItems, vegModeEnabled, searchFilter]);
 
   // Sort filtered items by rating
   const topItems = useMemo(() => {
@@ -105,10 +128,12 @@ const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
   }, [filteredItems]);
 
   return (
-    <div className="mt-8 px-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Dishes For You</h2>
-      </div>
+    <div className="mt-8">
+      <FilterSlider onFilterChange={handleFilterChange} />
+      <div className="px-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">Dishes For You</h2>
+        </div>
 
       {/* Loading state */}
       {loading && (
@@ -137,14 +162,15 @@ const FoodItemGrid = ({ onFoodClick, searchFilter }) => {
       {/* Error state */}
       {error && <div className="text-red-500 text-center py-8">{error}</div>}
 
-      {/* Flex layout with exactly 3 cards per row */}
-      {!loading && !error && (
-        <div className="flex flex-wrap -mx-2">
-          {topItems.map((food) => (
-            <FoodCard key={food.id} food={food} onFoodClick={onFoodClick} />
-          ))}
-        </div>
-      )}
+        {/* Flex layout with exactly 3 cards per row */}
+        {!loading && !error && (
+          <div className="flex flex-wrap -mx-2">
+            {topItems.map((food) => (
+              <FoodCard key={food.id} food={food} onFoodClick={onFoodClick} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
