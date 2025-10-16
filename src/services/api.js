@@ -64,6 +64,97 @@ export const fetchFoodItems = async () => {
   }
 };
 
+export const registerUser = async (userData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Registration failed');
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const fetchCategoryData = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/category/data`);
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserWishlist = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/getwishlist`);
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const addToWishlist = async (itemId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/addwish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId })
+    });
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserAddresses = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/getaddress`);
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteAddress = async (addressId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/deletaddress`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ addressId })
+    });
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getUserData = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/user/data`);
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 export const fetchUserProfile = async (forceRefresh = false) => {
   try {
     // Try to get cached profile
