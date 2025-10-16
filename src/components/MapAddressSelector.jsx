@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { FaTimes, FaLocationArrow } from 'react-icons/fa';
 import { useAppContext } from '../context/AppContext';
 import MyLocationPointer from './MyLocationPointer';
+import DeliveryTracker from './DeliveryTracker';
 
 const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
-  // Restaurant location (source)
-  const restaurantLocation = { lat: 26.715511, lng: 83.378906 };
+  // Restaurant location (source) - Fixed location
+  const restaurantLocation = { lat: 26.785759952866332, lng: 83.38553180232579 };
   
   const [selectedLocation, setSelectedLocation] = useState({ lat: 26.7606, lng: 83.3732 });
   const [address, setAddress] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [distance, setDistance] = useState(null);
 
   useEffect(() => {
     let mapInstance = null;
@@ -76,7 +78,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         console.log('MapmyIndia SDK loaded, initializing map...');
 
         mapInstance = new mapAPI.Map('address-selector-map', {
-          center: [83.378906, 26.715511],
+          center: [restaurantLocation.lng, restaurantLocation.lat],
           zoom: 15,
           minZoom: 10,
           maxZoom: 18,
@@ -86,68 +88,76 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         
         console.log('Map instance created:', mapInstance);
         
+        // Hide current location marker
+        const style = document.createElement('style');
+        style.textContent = `
+          .leaflet-marker-icon img[src*="current_location.png"] { display: none !important; }
+          .leaflet-control-locate { display: none !important; }
+        `;
+        document.head.appendChild(style);
+        
         // Create markers immediately after map creation
         console.log('Creating markers...');
         
-        // Wait for map to load before adding markers
+        // Create markers
         setTimeout(() => {
-          // Restaurant marker (red pin)
-          const restaurantMarker = mapAPI.marker({
-            map: mapInstance,
-            position: [restaurantLocation.lng, restaurantLocation.lat],
-            popupHtml: "🍽️ Restaurant"
-          });
-          
-          // Delivery marker (blue pin, draggable)
-          marker = mapAPI.marker({
-            map: mapInstance,
-            position: [selectedLocation.lng, selectedLocation.lat],
-            draggable: true,
-            popupHtml: "📍 Drag to select delivery location"
-          });
-          
-          console.log('Markers created successfully');
-          
-          // Marker drag events
-          marker.addListener('dragstart', () => {
-            mapInstance.setOptions({ draggable: false });
-          });
-          
-          marker.addListener('dragend', () => {
-            mapInstance.setOptions({ draggable: true });
-            const pos = marker.getPosition();
-            if (pos) {
-              updateLocation(pos[1], pos[0]); // lat, lng
+          try {
+            if (window.L && window.L.marker) {
+              // Fixed restaurant marker (red)
+              const restaurantMarker = window.L.marker([restaurantLocation.lat, restaurantLocation.lng], {
+                draggable: false
+              }).addTo(mapInstance);
+              
+              // User delivery marker (blue, draggable)
+              marker = window.L.marker([selectedLocation.lat, selectedLocation.lng], {
+                draggable: true
+              }).addTo(mapInstance);
+              
+              // Marker drag event
+              marker.on('dragend', (e) => {
+                const pos = e.target.getLatLng();
+                updateLocation(pos.lat, pos.lng);
+              });
+              
+              console.log('Restaurant and user markers created');
             }
-          });
-
-          // Map click event
-          mapInstance.addListener('click', (e) => {
-            let lat, lng;
-            if (e.lngLat && Array.isArray(e.lngLat)) {
-              lng = e.lngLat[0];
-              lat = e.lngLat[1];
-            } else if (e.lat && e.lng) {
-              lat = e.lat;
-              lng = e.lng;
-            } else {
-              return;
-            }
-            
-            marker.setPosition([lng, lat]);
-            updateLocation(lat, lng);
-          });
-
-          mapContainer._mapInstance = mapInstance;
-          mapContainer._marker = marker;
+          } catch (error) {
+            console.error('Error creating markers:', error);
+          }
         }, 1000);
+        
+        // Map click event - move marker to clicked location
+        if (mapInstance && mapInstance.on) {
+          mapInstance.on('click', (e) => {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            if (marker && marker.setLatLng) {
+              marker.setLatLng([lat, lng]);
+              updateLocation(lat, lng);
+            }
+          });
+        }
+
+        mapContainer._mapInstance = mapInstance;
+        mapContainer._marker = marker;
         
         console.log('Map initialized successfully, creating markers...');
         
+        let debounceTimer;
         const updateLocation = (lat, lng) => {
           console.log('Updating location to:', lat, lng);
           setSelectedLocation({ lat, lng });
-          fetchAddressFromMappls(lat, lng);
+          
+          // Calculate distance
+          const dist = calculateDistance(restaurantLocation.lat, restaurantLocation.lng, lat, lng);
+          setDistance(dist);
+          
+          // Debounce API calls to avoid too many requests
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            fetchAddressFromMappls(lat, lng);
+          }, 500);
         };
 
 
@@ -180,20 +190,92 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
     };
   }, [isOpen]);
 
+  const calculateDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in kilometers
+  };
+
   const fetchAddressFromMappls = async (lat, lng) => {
     setIsLoading(true);
     try {
-      // Use MapmyIndia REST API for reverse geocoding
+      // Try MapmyIndia reverse geocoding first (best for India)
+      try {
+        const mapplsResponse = await fetch(
+          `https://apis.mappls.com/advancedmaps/v1/49760dca539b17f8d2d3914bc8ee1dc1/rev_geocode?lat=${lat}&lng=${lng}`
+        );
+        const mapplsData = await mapplsResponse.json();
+        
+        if (mapplsData && mapplsData.results && mapplsData.results.length > 0) {
+          const result = mapplsData.results[0];
+          const addressParts = [];
+          
+          if (result.house_number) addressParts.push(result.house_number);
+          if (result.house_name) addressParts.push(result.house_name);
+          if (result.poi) addressParts.push(result.poi);
+          if (result.street) addressParts.push(result.street);
+          if (result.subSubLocality) addressParts.push(result.subSubLocality);
+          if (result.subLocality) addressParts.push(result.subLocality);
+          if (result.locality) addressParts.push(result.locality);
+          if (result.village) addressParts.push(result.village);
+          if (result.subDistrict) addressParts.push(result.subDistrict);
+          if (result.district) addressParts.push(result.district);
+          if (result.city) addressParts.push(result.city);
+          if (result.state) addressParts.push(result.state);
+          if (result.pincode) addressParts.push(result.pincode);
+          
+          const detailedAddress = addressParts.join(', ');
+          setAddress(detailedAddress);
+          return;
+        }
+      } catch (e) {
+        console.log('MapmyIndia geocoding failed, trying alternatives...');
+      }
+      
+      // Fallback 1: Nominatim with higher zoom
+      try {
+        const nominatimResponse = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=19&addressdetails=1`
+        );
+        const nominatimData = await nominatimResponse.json();
+        if (nominatimData && nominatimData.display_name) {
+          const addr = nominatimData.address;
+          const parts = [];
+          
+          if (addr?.house_number) parts.push(addr.house_number);
+          if (addr?.road) parts.push(addr.road);
+          if (addr?.neighbourhood) parts.push(addr.neighbourhood);
+          if (addr?.suburb) parts.push(addr.suburb);
+          if (addr?.city_district) parts.push(addr.city_district);
+          if (addr?.city || addr?.town) parts.push(addr.city || addr.town);
+          if (addr?.state) parts.push(addr.state);
+          if (addr?.postcode) parts.push(addr.postcode);
+          
+          const detailedAddress = parts.join(', ');
+          setAddress(detailedAddress);
+          return;
+        }
+      } catch (e) {
+        console.log('Nominatim failed, trying final backup...');
+      }
+      
+      // Final fallback
       const response = await fetch(
         `https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}&api_key=68356bb1a3afb750007085wdx475b3a`
       );
-      
       const data = await response.json();
       if (data && data.display_name) {
         setAddress(data.display_name);
       }
+      
     } catch (error) {
-      console.error('MapmyIndia geocoding failed:', error);
+      console.error('All geocoding services failed:', error);
+      setAddress(`Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
     } finally {
       setIsLoading(false);
     }
@@ -309,6 +391,15 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
               {isLoading ? 'Getting address...' : address || 'Select location on map'}
             </div>
           </div>
+          
+          {distance && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Distance from Restaurant:</label>
+              <div className="p-2 bg-blue-50 rounded text-sm">
+                {distance.toFixed(2)} km
+              </div>
+            </div>
+          )}
           
           <div className="flex gap-2">
             <button
