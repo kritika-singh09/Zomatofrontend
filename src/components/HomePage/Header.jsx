@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaLocationDot } from "react-icons/fa6";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { LuReceiptIndianRupee } from "react-icons/lu";
@@ -10,16 +10,18 @@ import FilterSlider from "./FilterSlider";
 import FoodCard from "./FoodCard";
 import { FiLogOut } from "react-icons/fi";
 import { useAppContext } from "../../context/AppContext";
+import MapAddressSelector from "../MapAddressSelector";
 
 const Header = ({ selectedAddress, onSearchSelect }) => {
   const [toggle, setToggle] = useState(false);
   const { logout, user, navigate, vegModeEnabled, toggleVegMode } = useAppContext();
   const [showMenu, setShowMenu] = useState(false);
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const handleProfileClick = () => {
     navigate("/profile");
@@ -143,22 +145,35 @@ const Header = ({ selectedAddress, onSearchSelect }) => {
 
   return (
     <>
-      <div className="flex justify-between ">
+      <div className="flex justify-between relative">
         <div className=" flex items-center m-2 text-xl w-[200px]">
           <div className="flex flex-col">
-            <div className="font-bold flex items-center gap-1 text-xl">
+            <div 
+              className="font-bold flex items-center gap-1 text-xl cursor-pointer"
+              onClick={() => setShowMapSelector(true)}
+            >
               <FaLocationDot className=" text-red-500 h-[18px] mt-[3px]" />
               {getAddressLine1()}
-              <RiArrowDropDownLine className="text-lg " />
+              <RiArrowDropDownLine className="text-lg" />
             </div>
             <div
-              className="text-sm ml-2"
-              style={{ transform: "translateY(-3px)" }}
+              className="text-sm ml-2 -translate-y-[3px]"
             >
               {getAddressLine2()}
             </div>
           </div>
         </div>
+
+        {/* Map Address Selector */}
+        <MapAddressSelector
+          isOpen={showMapSelector}
+          onClose={() => setShowMapSelector(false)}
+          onAddressSelect={(location) => {
+            console.log('Selected location:', location);
+            // Update selected address or create temporary address
+            setShowMapSelector(false);
+          }}
+        />
 
         <div className="flex items-center text-2xl">
           <div 

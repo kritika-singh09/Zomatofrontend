@@ -107,15 +107,27 @@ const ProfileUpdate = () => {
       phone: currentUser.phone || "",
     };
 
-    console.log("Sending data:", updatedData);
+    console.log("Sending data:", updatedData); // For debugging
 
     try {
-      // Update local user data immediately
-      const updatedUser = { ...currentUser, ...formData };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      localStorage.setItem("userProfile", JSON.stringify(updatedUser));
-      
-      if (refreshUserProfile) {
+      const response = await fetch(
+        "http://localhost:4000/api/auth/update",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Update local user data
+        const updatedUser = { ...user, ...formData };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        localStorage.setItem("userProfile", JSON.stringify(updatedUser));
         refreshUserProfile(true);
       }
       
