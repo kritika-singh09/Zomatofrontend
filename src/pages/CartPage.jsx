@@ -38,7 +38,6 @@ const CartPage = () => {
 
   // Update quantity handler
   const handleUpdateQuantity = (itemId, newQuantity) => {
-    console.log('Updating quantity:', itemId, newQuantity);
     if (newQuantity <= 0) {
       handleRemoveItem(itemId);
       return;
@@ -48,7 +47,6 @@ const CartPage = () => {
 
   // Remove item handler
   const handleRemoveItem = (itemId) => {
-    console.log('Removing item:', itemId);
     removeFromCart(itemId);
   };
 
@@ -144,8 +142,8 @@ const CartPage = () => {
             <CartItem
               key={item.id}
               item={item}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveItem={handleRemoveItem}
+              onUpdateQuantity={updateCartItemQuantity}
+              onRemoveItem={removeFromCart}
               onAddMore={() => window.history.back()}
             />
           ))}
@@ -221,11 +219,33 @@ const CartPage = () => {
             toggleDetails={() => setShowBillDetails(!showBillDetails)}
           />
 
+          {/* Selected Address Display */}
+          {selectedAddress ? (
+            <div className="bg-gray-50 p-3 rounded-lg mb-2 border">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="font-medium text-sm text-gray-700">
+                    Delivering to: {selectedAddress.nickname || selectedAddress.type}
+                  </div>
+                  <div className="text-xs text-gray-600 mt-1">
+                    {selectedAddress.house_no}, {selectedAddress.street}, {selectedAddress.city}
+                  </div>
+                </div>
+                <button
+                  className="text-blue-600 text-xs underline"
+                  onClick={() => setShowAddressPanel(true)}
+                >
+                  Change
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <button
             className="cursor-pointer w-full bg-green-700 text-white py-3 rounded-lg font-bold mt-2 hover:bg-green-800"
             onClick={() => setShowAddressPanel(true)}
           >
-            Select Address at next step
+            {selectedAddress ? 'Place Order' : 'Select Address to Continue'}
           </button>
         </div>
       )}
