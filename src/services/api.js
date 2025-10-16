@@ -5,6 +5,26 @@ const API_URL = `${API_BASE_URL}/api/item/get`;
 const CACHE_KEY = "foodItemsCache";
 const CACHE_EXPIRY_MINUTES = 24 * 60; // 24 hours in minutes
 
+export const sortItems = async (sortBy = 'rating', veg = null) => {
+  try {
+    let url = `${API_BASE_URL}/api/item/sort`;
+    const params = new URLSearchParams();
+    
+    if (sortBy) params.append('sortBy', sortBy);
+    if (veg !== null) params.append('veg', veg);
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    return { success: response.ok, data };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 export const fetchFoodItems = async () => {
   try {
     // fetchWithCache will fetch from API if cache is not available or expired
