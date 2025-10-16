@@ -10,7 +10,7 @@ import FilterSlider from "./FilterSlider";
 import FoodCard from "./FoodCard";
 import { FiLogOut } from "react-icons/fi";
 import { useAppContext } from "../../context/AppContext";
-import MapAddressSelector from "../MapAddressSelector";
+import LocationPicker from "../LocationPicker";
 
 const Header = ({ selectedAddress, onSearchSelect }) => {
   const [toggle, setToggle] = useState(false);
@@ -133,12 +133,16 @@ const Header = ({ selectedAddress, onSearchSelect }) => {
   };
 
   const getAddressLine1 = () => {
+    const deliveryLocation = JSON.parse(localStorage.getItem('selectedDeliveryLocation') || '{}');
+    if (deliveryLocation.name) return deliveryLocation.name;
     if (!selectedAddress || !selectedAddress.street) return "Azad Colony";
     const firstWord = selectedAddress.street.split(" ")[0];
     return firstWord || "Azad Colony";
   };
 
   const getAddressLine2 = () => {
+    const deliveryLocation = JSON.parse(localStorage.getItem('selectedDeliveryLocation') || '{}');
+    if (deliveryLocation.city) return deliveryLocation.city;
     if (!selectedAddress || !selectedAddress.city) return "Abc Colony";
     return selectedAddress.city;
   };
@@ -164,13 +168,14 @@ const Header = ({ selectedAddress, onSearchSelect }) => {
           </div>
         </div>
 
-        {/* Map Address Selector */}
-        <MapAddressSelector
+        {/* Location Picker */}
+        <LocationPicker
           isOpen={showMapSelector}
           onClose={() => setShowMapSelector(false)}
-          onAddressSelect={(location) => {
+          onLocationSelect={(location) => {
             console.log('Selected location:', location);
-            // Update selected address or create temporary address
+            // Update the displayed address
+            localStorage.setItem('selectedDeliveryLocation', JSON.stringify(location));
             setShowMapSelector(false);
           }}
         />

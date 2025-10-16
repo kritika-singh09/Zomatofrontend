@@ -1,14 +1,64 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaLocationArrow, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaLocationArrow, FaTimes, FaPlus } from 'react-icons/fa';
 import { useAppContext } from '../context/AppContext';
+import MapAddressSelector from './MapAddressSelector';
 
 const LocationPicker = ({ isOpen, onClose, onLocationSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [showMapSelector, setShowMapSelector] = useState(false);
   const searchTimeoutRef = useRef(null);
-  const { addresses, setSelectedAddressId } = useAppContext();
+  const { addresses, setSelectedAddressId, fetchAddresses, user } = useAppContext();
+  
+  // Debug log to check addresses
+  useEffect(() => {
+    console.log('LocationPicker addresses:', addresses);
+    console.log('LocationPicker user:', user);
+  }, [addresses, user]);
+  
+
+
+  // Get current location
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsSearching(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            const response = await fetch(
+              `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=68356bb1a3afb750007085wdx475b3a`
+            );
+            const data = await response.json();
+            
+            const locationData = {
+              id: 'current-location',
+              name: 'Current Location',
+              address: data.display_name || `${latitude}, ${longitude}`,
+              lat: latitude,
+              lng: longitude,
+              type: 'current'
+            };
+            
+            setCurrentLocation(locationData);
+          } catch (error) {
+            console.error('Failed to get address for current location:', error);
+          } finally {
+            setIsSearching(false);
+          }
+        },
+        () => {
+          setIsSearching(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  };
+
+
 
   // Search locations using MapmyIndia API
   const searchLocations = async (query) => {
@@ -82,49 +132,7 @@ const LocationPicker = ({ isOpen, onClose, onLocationSelect }) => {
     };
   }, [searchQuery]);
 
-  // Get current location
-  const getCurrentLocation = () => {
-    if (navigator.geolocation) {
-      setIsSearching(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          
-          try {
-            // Reverse geocode to get address
-            const response = await fetch(
-              `https://geocode.maps.co/reverse?lat=${latitude}&lon=${longitude}&api_key=68356bb1a3afb750007085wdx475b3a`
-            );
-            const data = await response.json();
-            
-            const locationData = {
-              id: 'current-location',
-              name: 'Current Location',
-              address: data.display_name || `${latitude}, ${longitude}`,
-              lat: latitude,
-              lng: longitude,
-              type: 'current'
-            };
-            
-            setCurrentLocation(locationData);
-            onLocationSelect(locationData);
-          } catch (error) {
-            console.error('Failed to get address for current location:', error);
-          } finally {
-            setIsSearching(false);
-          }
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          alert('Unable to get current location');
-          setIsSearching(false);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else {
-      alert('Geolocation not supported by this browser');
-    }
-  };
+
 
   if (!isOpen) return null;
 
@@ -176,41 +184,63 @@ const LocationPicker = ({ isOpen, onClose, onLocationSelect }) => {
         {/* Results */}
         <div className="max-h-96 overflow-y-auto">
           {/* Saved Addresses */}
-          {addresses.length > 0 && (
-            <div className="p-4 border-b">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Saved Addresses</h3>
-              {addresses.map((address) => (
-                <button
-                  key={address._id}
-                  onClick={() => {
-                    setSelectedAddressId(address._id);
-                    onLocationSelect({
-                      id: address._id,
-                      name: address.type,
-                      address: `${address.house_no}, ${address.street}, ${address.city}`,
-                      lat: address.lat,
-                      lng: address.lng,
-                      type: 'saved'
-                    });
-                  }}
-                  className="flex items-start w-full p-3 text-left hover:bg-gray-50 rounded-lg"
-                >
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 mt-1">
-                    {address.type === 'home' ? '🏠' : '🏢'}
+          <div className="p-4 border-b">
+            <h3 className="text-sm font-medium text-gray-700 mb-2">Saved Addresses</h3>
+            
+            {/* Add Address Option */}
+            <button
+              onClick={() => setShowMapSelector(true)}
+              className="flex items-center w-full p-3 text-left hover:bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 mb-3"
+            >
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                <FaPlus className="text-red-600 text-sm" />
+              </div>
+              <div className="flex-1">
+                <div className="font-medium text-red-600">Add Address</div>
+                <div className="text-sm text-gray-500">
+                  Add a new delivery address
+                </div>
+              </div>
+            </button>
+            
+            {/* Existing Saved Addresses */}
+            {addresses?.map((address) => (
+              <button
+                key={address._id}
+                onClick={() => {
+                  setSelectedAddressId(address._id);
+                  onLocationSelect({
+                    id: address._id,
+                    name: address.type,
+                    address: `${address.house_no}, ${address.street}, ${address.city}`,
+                    lat: address.lat,
+                    lng: address.lng,
+                    type: 'saved'
+                  });
+                }}
+                className="flex items-start w-full p-3 text-left hover:bg-gray-50 rounded-lg mb-2"
+              >
+                <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 mt-1">
+                  {address.type === 'home' ? '🏠' : '🏢'}
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium capitalize">{address.type}</div>
+                  <div className="text-sm text-gray-500">
+                    {address.house_no}, {address.street}
                   </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{address.type}</div>
-                    <div className="text-sm text-gray-500">
-                      {address.house_no}, {address.street}
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      {address.city}, {address.state}
-                    </div>
+                  <div className="text-sm text-gray-400">
+                    {address.city}, {address.state}
                   </div>
-                </button>
-              ))}
-            </div>
-          )}
+                </div>
+              </button>
+            ))}
+            
+            {(!addresses || addresses.length === 0) && (
+              <div className="text-center py-4 text-gray-500 text-sm">
+                No saved addresses yet
+              </div>
+            )}
+          </div>
 
           {/* Search Results */}
           {searchQuery && (
@@ -242,6 +272,16 @@ const LocationPicker = ({ isOpen, onClose, onLocationSelect }) => {
             </div>
           )}
         </div>
+        
+        {/* Map Address Selector Modal */}
+        <MapAddressSelector
+          isOpen={showMapSelector}
+          onClose={() => setShowMapSelector(false)}
+          onAddressSelect={(selectedAddress) => {
+            setShowMapSelector(false);
+            onLocationSelect(selectedAddress);
+          }}
+        />
       </div>
     </div>
   );

@@ -9,15 +9,84 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
   const restaurantLocation = { lat: 26.785759952866332, lng: 83.38553180232579 };
   
   const [selectedLocation, setSelectedLocation] = useState({ lat: 26.7606, lng: 83.3732 });
+  const [currentLocation, setCurrentLocation] = useState(null);
   const [address, setAddress] = useState('');
+  const [addressFields, setAddressFields] = useState({
+    houseNumber: '',
+    street: '',
+    city: '',
+    state: '',
+    pincode: '',
+    landmark: ''
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [distance, setDistance] = useState(null);
+
+  const fetchAddressFromMappls = async (lat, lng) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}&api_key=68356bb1a3afb750007085wdx475b3a`
+      );
+      const data = await response.json();
+      if (data && data.display_name) {
+        setAddress(data.display_name);
+        
+        // Parse and auto-fill address fields
+        const parts = data.display_name.split(', ');
+        setAddressFields({
+          houseNumber: parts[0] || '',
+          street: parts[1] || '',
+          city: parts[2] || '',
+          state: parts[3] || '',
+          pincode: parts[4] || '',
+          landmark: ''
+        });
+      }
+    } catch (error) {
+      setAddress(`Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      return;
+    }
+
+    setIsLoading(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setSelectedLocation({ lat: latitude, lng: longitude });
+        setCurrentLocation({ lat: latitude, lng: longitude });
+        fetchAddressFromMappls(latitude, longitude);
+      },
+      () => {
+        setIsLoading(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000
+      }
+    );
+  };
+
+  // Auto-get current location when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      getCurrentLocation();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     let mapInstance = null;
     let marker = null;
 
-    if (isOpen) {
+    if (isOpen && currentLocation) {
       const initMap = () => {
         const mapContainer = document.getElementById('address-selector-map');
         
@@ -39,7 +108,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
             <div class="text-3xl mb-2">📍</div>
             <div class="text-gray-700 font-medium">Interactive Map</div>
             <div class="text-xs text-gray-500 mt-1">Click to select location</div>
-            <div id="coord-display" class="text-xs text-gray-500 mt-1">Lat: ${selectedLocation.lat.toFixed(4)}, Lng: ${selectedLocation.lng.toFixed(4)}</div>
+            <div id="coord-display" class="text-xs text-gray-500 mt-1">Lat: ${currentLocation.lat.toFixed(4)}, Lng: ${currentLocation.lng.toFixed(4)}</div>
           `;
           
           const labelDiv = document.createElement('div');
@@ -67,7 +136,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
             }
           });
           
-          fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
+          fetchAddressFromMappls(currentLocation.lat, currentLocation.lng);
           return;
         }
         
@@ -78,7 +147,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         console.log('MapmyIndia SDK loaded, initializing map...');
 
         mapInstance = new mapAPI.Map('address-selector-map', {
-          center: [restaurantLocation.lng, restaurantLocation.lat],
+          center: [currentLocation.lng, currentLocation.lat],
           zoom: 15,
           minZoom: 10,
           maxZoom: 18,
@@ -108,8 +177,8 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
                 draggable: false
               }).addTo(mapInstance);
               
-              // User delivery marker (blue, draggable)
-              marker = window.L.marker([selectedLocation.lat, selectedLocation.lng], {
+              // User delivery marker (blue, draggable) at current location
+              marker = window.L.marker([currentLocation.lat, currentLocation.lng], {
                 draggable: true
               }).addTo(mapInstance);
               
@@ -162,8 +231,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
 
 
         
-        // Get initial address
-        fetchAddressFromMappls(selectedLocation.lat, selectedLocation.lng);
+
       };
       
       setTimeout(initMap, 500);
@@ -188,7 +256,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
         mapContainer.innerHTML = '';
       }
     };
-  }, [isOpen]);
+  }, [isOpen, currentLocation]);
 
   const calculateDistance = (lat1, lng1, lat2, lng2) => {
     const R = 6371; // Earth's radius in kilometers
@@ -201,154 +269,21 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
     return R * c; // Distance in kilometers
   };
 
-  const fetchAddressFromMappls = async (lat, lng) => {
-    setIsLoading(true);
-    try {
-      // Try MapmyIndia reverse geocoding first (best for India)
-      try {
-        const mapplsResponse = await fetch(
-          `https://apis.mappls.com/advancedmaps/v1/49760dca539b17f8d2d3914bc8ee1dc1/rev_geocode?lat=${lat}&lng=${lng}`
-        );
-        const mapplsData = await mapplsResponse.json();
-        
-        if (mapplsData && mapplsData.results && mapplsData.results.length > 0) {
-          const result = mapplsData.results[0];
-          const addressParts = [];
-          
-          if (result.house_number) addressParts.push(result.house_number);
-          if (result.house_name) addressParts.push(result.house_name);
-          if (result.poi) addressParts.push(result.poi);
-          if (result.street) addressParts.push(result.street);
-          if (result.subSubLocality) addressParts.push(result.subSubLocality);
-          if (result.subLocality) addressParts.push(result.subLocality);
-          if (result.locality) addressParts.push(result.locality);
-          if (result.village) addressParts.push(result.village);
-          if (result.subDistrict) addressParts.push(result.subDistrict);
-          if (result.district) addressParts.push(result.district);
-          if (result.city) addressParts.push(result.city);
-          if (result.state) addressParts.push(result.state);
-          if (result.pincode) addressParts.push(result.pincode);
-          
-          const detailedAddress = addressParts.join(', ');
-          setAddress(detailedAddress);
-          return;
-        }
-      } catch (e) {
-        console.log('MapmyIndia geocoding failed, trying alternatives...');
-      }
-      
-      // Fallback 1: Nominatim with higher zoom
-      try {
-        const nominatimResponse = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=19&addressdetails=1`
-        );
-        const nominatimData = await nominatimResponse.json();
-        if (nominatimData && nominatimData.display_name) {
-          const addr = nominatimData.address;
-          const parts = [];
-          
-          if (addr?.house_number) parts.push(addr.house_number);
-          if (addr?.road) parts.push(addr.road);
-          if (addr?.neighbourhood) parts.push(addr.neighbourhood);
-          if (addr?.suburb) parts.push(addr.suburb);
-          if (addr?.city_district) parts.push(addr.city_district);
-          if (addr?.city || addr?.town) parts.push(addr.city || addr.town);
-          if (addr?.state) parts.push(addr.state);
-          if (addr?.postcode) parts.push(addr.postcode);
-          
-          const detailedAddress = parts.join(', ');
-          setAddress(detailedAddress);
-          return;
-        }
-      } catch (e) {
-        console.log('Nominatim failed, trying final backup...');
-      }
-      
-      // Final fallback
-      const response = await fetch(
-        `https://geocode.maps.co/reverse?lat=${lat}&lon=${lng}&api_key=68356bb1a3afb750007085wdx475b3a`
-      );
-      const data = await response.json();
-      if (data && data.display_name) {
-        setAddress(data.display_name);
-      }
-      
-    } catch (error) {
-      console.error('All geocoding services failed:', error);
-      setAddress(`Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const getCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation not supported by this browser');
-      return;
-    }
 
-    setIsLoading(true);
-    console.log('Getting current location...');
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        console.log('Got location:', latitude, longitude);
-        
-        setSelectedLocation({ lat: latitude, lng: longitude });
-        
-        // Update map and marker
-        const mapContainer = document.getElementById('address-selector-map');
-        if (mapContainer && mapContainer._mapInstance && mapContainer._marker) {
-          const mapInstance = mapContainer._mapInstance;
-          const marker = mapContainer._marker;
-          
-          // Center map on current location
-          mapInstance.setCenter([longitude, latitude]);
-          mapInstance.setZoom(15);
-          
-          // Move marker to current location
-          marker.setPosition({ lat: latitude, lng: longitude });
-          
-          console.log('Map and marker updated');
-        }
-        
-        fetchAddressFromMappls(latitude, longitude);
-        setIsLoading(false);
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
-        let message = 'Unable to get current location';
-        
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            message = 'Location access denied. Please enable location permissions.';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            message = 'Location information unavailable.';
-            break;
-          case error.TIMEOUT:
-            message = 'Location request timed out.';
-            break;
-        }
-        
-        alert(message);
-        setIsLoading(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-  };
+
 
   const handleConfirm = () => {
     onAddressSelect({
       lat: selectedLocation.lat,
       lng: selectedLocation.lng,
       address: address,
-      name: address.split(',')[0] || 'Selected Location'
+      name: addressFields.houseNumber || address.split(',')[0] || 'Selected Location',
+      street: addressFields.street,
+      city: addressFields.city,
+      state: addressFields.state,
+      pincode: addressFields.pincode,
+      landmark: addressFields.landmark
     });
     onClose();
   };
@@ -357,7 +292,7 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[95vh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold">Select Delivery Location</h2>
           <button onClick={onClose} className="text-gray-500">
@@ -384,11 +319,80 @@ const MapAddressSelector = ({ isOpen, onClose, onAddressSelect }) => {
           </div>
         </div>
 
-        <div className="p-4">
+        <div className="p-4 overflow-y-auto flex-1">
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Selected Address:</label>
             <div className="p-2 bg-gray-50 rounded text-sm min-h-[40px]">
               {isLoading ? 'Getting address...' : address || 'Select location on map'}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">House/Flat Number*</label>
+              <input 
+                type="text" 
+                value={addressFields.houseNumber}
+                onChange={(e) => setAddressFields({...addressFields, houseNumber: e.target.value})}
+                placeholder="123" 
+                className="w-full p-2 border rounded text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Street Address*</label>
+              <input 
+                type="text" 
+                value={addressFields.street}
+                onChange={(e) => setAddressFields({...addressFields, street: e.target.value})}
+                placeholder="Main Street" 
+                className="w-full p-2 border rounded text-sm" 
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">City*</label>
+              <input 
+                type="text" 
+                value={addressFields.city}
+                onChange={(e) => setAddressFields({...addressFields, city: e.target.value})}
+                placeholder="Delhi" 
+                className="w-full p-2 border rounded text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">State</label>
+              <input 
+                type="text" 
+                value={addressFields.state}
+                onChange={(e) => setAddressFields({...addressFields, state: e.target.value})}
+                placeholder="Delhi" 
+                className="w-full p-2 border rounded text-sm" 
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Pincode*</label>
+              <input 
+                type="text" 
+                value={addressFields.pincode}
+                onChange={(e) => setAddressFields({...addressFields, pincode: e.target.value})}
+                placeholder="110001" 
+                className="w-full p-2 border rounded text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Landmark</label>
+              <input 
+                type="text" 
+                value={addressFields.landmark}
+                onChange={(e) => setAddressFields({...addressFields, landmark: e.target.value})}
+                placeholder="Near Metro Station" 
+                className="w-full p-2 border rounded text-sm" 
+              />
             </div>
           </div>
           
